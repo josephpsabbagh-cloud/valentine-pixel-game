@@ -192,6 +192,11 @@ const bedroomArtAssets = {
   clutter3: { src: "assets/props/cozy_clutter_set3.png", image: null, loaded: false, errored: false },
   clutter4: { src: "assets/props/cozy_clutter_set4.png", image: null, loaded: false, errored: false }
 };
+const backgroundTileAssets = {
+  grass: { src: "assets/tiles/grass_48.png", image: null, loaded: false, errored: false },
+  stonePath: { src: "assets/tiles/path_stone_48.png", image: null, loaded: false, errored: false },
+  patio: { src: "assets/tiles/patio_48.png", image: null, loaded: false, errored: false }
+};
 const destinationArtAssets = {
   skiLiftKiosk: { src: "assets/props/ski_lift_kiosk.png", image: null, loaded: false, errored: false, renderMode: "crop" },
   airportDeparturesKiosk: {
@@ -416,6 +421,22 @@ function loadDestinationArtAssets() {
     asset.image.onload = () => {
       asset.loaded = true;
       prepareDestinationAsset(asset);
+    };
+    asset.image.onerror = () => {
+      asset.errored = true;
+      asset.loaded = false;
+    };
+    asset.image.src = asset.src;
+  }
+}
+
+function loadBackgroundTileAssets() {
+  for (const asset of Object.values(backgroundTileAssets)) {
+    asset.image = new Image();
+    asset.loaded = false;
+    asset.errored = false;
+    asset.image.onload = () => {
+      asset.loaded = true;
     };
     asset.image.onerror = () => {
       asset.errored = true;
@@ -4641,34 +4662,22 @@ function drawPlainGridTile(layout, x, y, px, py, size) {
 }
 
 function drawBackgroundTileById(tileId, x, y, px, py, size) {
-  switch (tileId) {
-    case "grass": {
-      ctx.fillStyle = "#d8ebca";
-      ctx.fillRect(px, py, size, size);
-      if ((x + y) % 3 === 0) {
-        ctx.fillStyle = "rgba(129, 167, 118, 0.25)";
-        ctx.fillRect(px + 7, py + 10, 4, 6);
-        ctx.fillRect(px + 15, py + 20, 3, 5);
-      }
-      return true;
+  const drawTileAsset = (assetKey) => {
+    const asset = backgroundTileAssets[assetKey];
+    if (!asset || !asset.loaded || !asset.image || asset.errored) {
+      return false;
     }
-    case "path":
-      ctx.fillStyle = "#d5d4d7";
-      ctx.fillRect(px, py, size, size);
-      ctx.fillStyle = "rgba(245, 245, 248, 0.3)";
-      ctx.fillRect(px + 2, py + 4, size - 4, 2);
-      return true;
-    case "water":
-      ctx.fillStyle = "#87c8e2";
-      ctx.fillRect(px, py, size, size);
-      ctx.fillStyle = "rgba(230, 246, 255, 0.28)";
-      ctx.fillRect(px + 8, py + 10, size - 16, 2);
-      ctx.fillRect(px + 14, py + 20, size - 26, 2);
-      return true;
-    case "bedroom-floor":
-      ctx.fillStyle = ((x + y) % 2 === 0) ? "#f9efdf" : "#f5e7d4";
-      ctx.fillRect(px, py, size, size);
-      return true;
+    ctx.drawImage(asset.image, px, py, size, size);
+    return true;
+  };
+
+  switch (tileId) {
+    case "grass":
+      return drawTileAsset("grass");
+    case "stone-path":
+      return drawTileAsset("stonePath");
+    case "patio":
+      return drawTileAsset("patio");
     case "snow":
       ctx.fillStyle = "#eaf4fb";
       ctx.fillRect(px, py, size, size);
@@ -5518,6 +5527,7 @@ function start() {
   loadPetSprites();
   loadCousinSwimSprites();
   loadBedroomArtAssets();
+  loadBackgroundTileAssets();
   loadDestinationArtAssets();
   loadPimpleSceneAssets();
   loadPersistentState();
