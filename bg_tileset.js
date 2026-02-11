@@ -27,6 +27,10 @@ export function getBackgroundTileId(world, x, y, layout) {
     if (inRect(zones.bedroomRegion, x, y)) {
       return null;
     }
+    // Keep pool interior blue from the base renderer.
+    if (inRect(zones.poolRegion, x, y)) {
+      return null;
+    }
     if (inRect(zones.outsideRegion, x, y) && isPoolEdgeTile(zones.poolRegion, x, y)) {
       return "patio";
     }

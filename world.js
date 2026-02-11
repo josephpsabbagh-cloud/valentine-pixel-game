@@ -59,6 +59,59 @@ function addPerimeter(walls, wallSet, width, height, rect, gapSide = null) {
   }
 }
 
+const SKI_DECOR_ITEMS = [
+  { id: "ski-tree-1", type: "ski-tree", x: 6, y: 6, w: 2, h: 2 },
+  { id: "ski-tree-2", type: "ski-tree", x: 29, y: 6, w: 2, h: 2 },
+  { id: "ski-tree-3", type: "ski-tree", x: 31, y: 10, w: 2, h: 2 },
+  { id: "ski-tree-4", type: "ski-tree", x: 5, y: 12, w: 2, h: 2 },
+  { id: "ski-fence-1", type: "ski-fence", x: 11, y: 22, w: 5, h: 1 },
+  { id: "ski-fence-2", type: "ski-fence", x: 20, y: 22, w: 5, h: 1 },
+  { id: "ski-bank-1", type: "snowbank", x: 12, y: 7, w: 3, h: 2 },
+  { id: "ski-bank-2", type: "snowbank", x: 23, y: 15, w: 3, h: 2 },
+  { id: "ski-sign-1", type: "ski-sign", x: 16, y: 21, w: 2, h: 2 },
+  // Emphasized placements near lift and snowbanks for visibility.
+  { id: "ski-rock-1", type: "ski-rock", x: 10, y: 18, w: 2, h: 2 },
+  { id: "ski-rock-2", type: "ski-rock", x: 22, y: 16, w: 2, h: 2 },
+  { id: "ski-flag-1", type: "ski-flag", x: 12, y: 18, w: 1, h: 2 },
+  { id: "ski-flag-2", type: "ski-flag", x: 8, y: 19, w: 1, h: 2 },
+  { id: "ski-flag-3", type: "ski-flag", x: 20, y: 15, w: 1, h: 2 },
+  { id: "ski-flag-4", type: "ski-flag", x: 24, y: 15, w: 1, h: 2 }
+];
+
+const AIRPORT_DECOR_ITEMS = [
+  { id: "air-bench-1", type: "airport-bench", x: 7, y: 8, w: 4, h: 2 },
+  { id: "air-bench-2", type: "airport-bench", x: 22, y: 8, w: 4, h: 2 },
+  { id: "air-bench-3", type: "airport-bench", x: 9, y: 14, w: 4, h: 2 },
+  { id: "air-cart-1", type: "airport-cart", x: 12, y: 12, w: 2, h: 2 },
+  { id: "air-cart-2", type: "airport-cart", x: 20, y: 13, w: 2, h: 2 },
+  { id: "air-plant-1", type: "airport-plant", x: 6, y: 6, w: 2, h: 2 },
+  { id: "air-plant-2", type: "airport-plant", x: 28, y: 6, w: 2, h: 2 },
+  { id: "air-barrier-1", type: "airport-barrier", x: 14, y: 12, w: 5, h: 1 },
+  { id: "air-barrier-2", type: "airport-barrier", x: 14, y: 15, w: 5, h: 1 },
+  // Queue/luggage grouped around departures kiosk and central walkway.
+  { id: "air-rope-1", type: "airport-queue-rope", x: 11, y: 12, w: 2, h: 1 },
+  { id: "air-rope-2", type: "airport-queue-rope", x: 14, y: 12, w: 2, h: 1 },
+  { id: "air-luggage-1", type: "airport-luggage", x: 16, y: 10, w: 2, h: 1 },
+  { id: "air-luggage-2", type: "airport-luggage", x: 19, y: 12, w: 2, h: 1 },
+  { id: "air-plant-kiosk-1", type: "airport-kiosk-plant", x: 7, y: 12, w: 2, h: 2 }
+];
+
+const RESTAURANT_DECOR_ITEMS = [
+  { id: "rest-table-1", type: "rest-table", x: 7, y: 7, w: 3, h: 3 },
+  { id: "rest-table-2", type: "rest-table", x: 22, y: 7, w: 3, h: 3 },
+  { id: "rest-table-3", type: "rest-table", x: 10, y: 12, w: 3, h: 3 },
+  { id: "rest-table-4", type: "rest-table", x: 19, y: 12, w: 3, h: 3 },
+  { id: "rest-plant-1", type: "rest-plant", x: 6, y: 5, w: 2, h: 2 },
+  { id: "rest-plant-2", type: "rest-plant", x: 25, y: 5, w: 2, h: 2 },
+  { id: "rest-candle-1", type: "rest-candle", x: 15, y: 12, w: 1, h: 1 },
+  { id: "rest-rug-1", type: "rest-rug", x: 12, y: 9, w: 8, h: 2 },
+  { id: "rest-frame-1", type: "rest-frame", x: 13, y: 5, w: 3, h: 1 },
+  // Keep props large and central enough to be obvious.
+  { id: "rest-menu-1", type: "rest-menu-board", x: 23, y: 8, w: 2, h: 1 },
+  { id: "rest-window-1", type: "rest-window", x: 13, y: 4, w: 2, h: 1 },
+  { id: "rest-candle-table-1", type: "rest-candle-table", x: 16, y: 13, w: 2, h: 1 }
+];
+
 function buildHomeLayout() {
   const width = 60;
   const height = 40;
@@ -170,17 +223,7 @@ function buildSkiLayout() {
     { id: "telesiege", x: 8, y: 20, w: 5, h: 4, label: "Telesiege", type: "telesiege" },
     { id: "ski-back-car", x: 30, y: 22, w: 4, h: 2, label: "Back to Car", type: "back-car" }
   ];
-  const decor = [
-    { id: "ski-tree-1", type: "ski-tree", x: 6, y: 6, w: 2, h: 2 },
-    { id: "ski-tree-2", type: "ski-tree", x: 29, y: 6, w: 2, h: 2 },
-    { id: "ski-tree-3", type: "ski-tree", x: 31, y: 10, w: 2, h: 2 },
-    { id: "ski-tree-4", type: "ski-tree", x: 5, y: 12, w: 2, h: 2 },
-    { id: "ski-fence-1", type: "ski-fence", x: 11, y: 22, w: 5, h: 1 },
-    { id: "ski-fence-2", type: "ski-fence", x: 20, y: 22, w: 5, h: 1 },
-    { id: "ski-bank-1", type: "snowbank", x: 12, y: 7, w: 3, h: 2 },
-    { id: "ski-bank-2", type: "snowbank", x: 23, y: 15, w: 3, h: 2 },
-    { id: "ski-sign-1", type: "ski-sign", x: 16, y: 21, w: 2, h: 2 }
-  ];
+  const decor = SKI_DECOR_ITEMS;
 
   const flowerPickups = [
     { id: "flower-ski-1", x: 8, y: 8 },
@@ -223,17 +266,7 @@ function buildAirportLayout() {
     { id: "departures", x: 8, y: 13, w: 5, h: 4, label: "Departures", type: "departures" },
     { id: "airport-back-car", x: 26, y: 17, w: 5, h: 2, label: "Back to Car", type: "back-car" }
   ];
-  const decor = [
-    { id: "air-bench-1", type: "airport-bench", x: 7, y: 8, w: 4, h: 2 },
-    { id: "air-bench-2", type: "airport-bench", x: 22, y: 8, w: 4, h: 2 },
-    { id: "air-bench-3", type: "airport-bench", x: 9, y: 14, w: 4, h: 2 },
-    { id: "air-cart-1", type: "airport-cart", x: 12, y: 12, w: 2, h: 2 },
-    { id: "air-cart-2", type: "airport-cart", x: 20, y: 13, w: 2, h: 2 },
-    { id: "air-plant-1", type: "airport-plant", x: 6, y: 6, w: 2, h: 2 },
-    { id: "air-plant-2", type: "airport-plant", x: 28, y: 6, w: 2, h: 2 },
-    { id: "air-barrier-1", type: "airport-barrier", x: 14, y: 12, w: 5, h: 1 },
-    { id: "air-barrier-2", type: "airport-barrier", x: 14, y: 15, w: 5, h: 1 }
-  ];
+  const decor = AIRPORT_DECOR_ITEMS;
 
   return {
     name: "airport",
@@ -265,17 +298,7 @@ function buildRestaurantLayout() {
     { id: "restaurant-door", x: 9, y: 12, w: 5, h: 4, label: "Restaurant", type: "restaurant-door" },
     { id: "restaurant-back-car", x: 24, y: 16, w: 5, h: 2, label: "Back to Car", type: "back-car" }
   ];
-  const decor = [
-    { id: "rest-table-1", type: "rest-table", x: 7, y: 7, w: 3, h: 3 },
-    { id: "rest-table-2", type: "rest-table", x: 22, y: 7, w: 3, h: 3 },
-    { id: "rest-table-3", type: "rest-table", x: 10, y: 12, w: 3, h: 3 },
-    { id: "rest-table-4", type: "rest-table", x: 19, y: 12, w: 3, h: 3 },
-    { id: "rest-plant-1", type: "rest-plant", x: 6, y: 5, w: 2, h: 2 },
-    { id: "rest-plant-2", type: "rest-plant", x: 25, y: 5, w: 2, h: 2 },
-    { id: "rest-candle-1", type: "rest-candle", x: 15, y: 12, w: 1, h: 1 },
-    { id: "rest-rug-1", type: "rest-rug", x: 12, y: 9, w: 8, h: 2 },
-    { id: "rest-frame-1", type: "rest-frame", x: 13, y: 5, w: 3, h: 1 }
-  ];
+  const decor = RESTAURANT_DECOR_ITEMS;
 
   const flowerPickups = [
     { id: "flower-rest-1", x: 8, y: 9 },

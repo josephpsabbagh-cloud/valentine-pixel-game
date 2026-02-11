@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Our Little World</title>
+    <link rel="stylesheet" href="style.css?v=20260211-restore1" />
+    <script>
+      const ACCESS_KEY = "olw_access_granted";
+      const ACCESS_VALUE = "yes";
+      if (sessionStorage.getItem(ACCESS_KEY) !== ACCESS_VALUE) {
+        window.location.replace("./index.html");
+      }
+      window.addEventListener("beforeunload", () => {
+        sessionStorage.removeItem(ACCESS_KEY);
+      });
+    </script>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+      <div id="ui"></div>
+    </main>
+
+    <audio id="driveTrack1" preload="auto" src="assets/music/track5.mp3"></audio>
+    <audio id="driveTrack2" preload="auto" src="assets/music/track6.mp3"></audio>
+    <audio id="driveTrack3" preload="auto" src="assets/music/track3.mp3"></audio>
+    <audio id="driveTrack4" preload="auto" src="assets/music/track4.mp3"></audio>
+    <audio id="driveTrack5" preload="auto" src="assets/music/track1.mp3"></audio>
+    <audio id="driveTrack6" preload="auto" src="assets/music/track2.mp3"></audio>
+    <audio id="ambientTrack" preload="auto" src="assets/music/ambient_happy_memories.mp3"></audio>
+
+    <script type="module" src="game.js?v=20260211-rewardfix1"></script>
+  </body>
+</html>

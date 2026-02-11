@@ -1,6 +1,6 @@
-import { getWorldLayout, worldLayouts } from "./world.js";
-import { characters } from "./characters.js";
-import { getBackgroundTileId } from "./bg_tileset.js";
+import { getWorldLayout, worldLayouts } from "./world.js?v=20260211-propfix4";
+import { characters } from "./characters.js?v=20260211-propfix4";
+import { getBackgroundTileId } from "./bg_tileset.js?v=20260211-propfix4";
 import {
   getInteractableNearPlayer,
   isPointInRect,
@@ -9,7 +9,7 @@ import {
   saveJsonArray,
   tryCollectFlower,
   tryPetInteraction
-} from "./interactions.js";
+} from "./interactions.js?v=20260211-propfix4";
 
 const TOTAL_FLOWERS_KEY = "olw_totalFlowers";
 const COLLECTED_FLOWER_IDS_KEY = "olw_collectedFlowerIds";
@@ -21,56 +21,65 @@ const SKI_LAST_CLAIM_DATE_KEY = "olw_skiLastClaimDate";
 const RESTAURANT_WIN_DATE_KEY = "olw_restaurantWinDate";
 const EDIT_WIN_DATE_KEY = "olw_editWinDate";
 const UNLOCKED_LETTERS_KEY = "olw_unlockedLetters";
+const RESET_PROGRESS_ON_PAGE_LOAD = true;
+console.info("valentine_pixel_game build: 20260211-propfix4");
+const STALE_LETTER_TEXT_KEYS = [
+  "olw_letters",
+  "olw_letterRepo",
+  "olw_letterRepository",
+  "olw_letterBodies",
+  "olw_letterTexts"
+];
 
-const LETTER_MILESTONES = [10, 20, 35, 50, 70, 95, 125];
+const LETTER_MILESTONES = [10, 20, 30, 40, 50, 60, 70];
 const LOVE_LETTERS = [
   {
     id: "letter-1",
-    title: "First Bloom",
+    title: "The Beginning",
     body:
-      "Charly,\n\nEvery tiny win you make feels big to me.\nEven your quiet moments are bright.\n\n- Joe"
+      "I still remember that split second at Albergo.\n\nWe didn't even speak. I just saw you across the room and felt instantly drawn to you.\nYou looked extremly beautiful, but more than that, there was something about you that made me curious.\nI had no idea that tiny moment would lead me to the woman of my life.\n\n- Joe"
   },
   {
     id: "letter-2",
-    title: "Soft Evenings",
+    title: "What I Admire",
     body:
-      "My love,\n\nYou make ordinary evenings feel warm.\nI still smile at your sleepy face on movie nights.\n\n- Joe"
+      "My love,\n\nThere are so many things I admire about you.\nYou're strong and independent, but you still have the softest heart.\nYou care deeply, not just about me, but about everyone you love.\nEven when you're upset, you still make sure the people around you are okay.\nThat balance in you is something I respect so much.\n\n- Joe"
   },
   {
     id: "letter-3",
-    title: "Your Spark",
+    title: "The Little Things",
     body:
-      "Charly,\n\nYou bring energy to every room.\nThat big smile of yours always wins me over.\n\n- Joe"
+      "It's the little things you probably don't even realise mean a lot to me.\n\nThe way you pull our pillows closer before we sleep.\nThe way you always try to increase my confidence and hype me up.\nHow you rest your head and wrap yourself around my arm like that's exactly where you belong.\nThe way you kiss my face when I'm still sleeping before leaving for work.\nThe way you are really close to my family.\nThat big smile of yours always wins me over.\n\n- Joe"
   },
   {
     id: "letter-4",
-    title: "Playful Promise",
+    title: "When it wasn't Perfect",
     body:
-      "Hey trouble,\n\nIf you steal the blanket again,\nI still choose you.\nEvery single night.\n\n- Joe"
+      "It hasn't always been perfect.\n\nWe've had disagreements, hard moments, and distance between us (literally).\nBut through it all, we learned so much about each other.\nWe understood each other better.\nWe grew together, not just individually, but also as a couple.\nAnd that's what I love about us.\n\n- Joe"
   },
   {
     id: "letter-5",
-    title: "Little Things",
+    title: "What Loving You Feels Like",
     body:
-      "Charly,\n\nI notice the little things:\nYour laugh, your focus, your kindness.\nThey matter more than you think.\n\n- Joe"
+      "Loving you feels amazing.\n\nIt feels like peace after a long day.\nLike I can be myself without pretending.\nWith you, everything feels lighter and more natural.\nIt really feels like home.\n\n- Joe"
   },
   {
     id: "letter-6",
-    title: "Always Home",
+    title: "The Future",
     body:
-      "My heart,\n\nNo matter where we go,\nhome is wherever we are together.\n\n- Joe"
+      "I get excited thinking about what's ahead of us.\n\nAll the places we'll explore, the things we'll tick off our bucket list, and even the mundane moments at home.\nLife won't be easy, but we'll go through it together.\nAnd knowing that this future with you is getting closer makes me happy.\n\n- Joe"
   },
   {
     id: "letter-7",
-    title: "Forever Note",
+    title: "The Core",
     body:
-      "Charly,\n\nThank you for being my favorite person.\nI will keep choosing you,\nsoftly and loudly,\nevery day.\n\n- Joe"
+      "Charly,\n\nThank you for being my favorite person.\nI will keep choosing you,\nevery day.\nLike I always say, I am so grateful to call you mine.\nHappy Valentine's Day my love.\n\n- Joe"
   }
 ];
 
 const MINI_GAMES = {
   movie: {
-    rewardFlowers: 3,
+    rewardFlowers: 10,
     dailyKey: MOVIE_LAST_CLAIM_DATE_KEY,
     chooseOptions: ["Reality Show", "Classics (Joe's pick)", "Thriller Documentary (Charly's pick)"],
     durations: {
@@ -87,10 +96,10 @@ const MINI_GAMES = {
       popVeryFastMs: 240
     },
     moodCooldownMs: 1500,
-    rewardFlowers: 1
+    rewardFlowers: 10
   },
   edit: {
-    rewardFlowers: 4,
+    rewardFlowers: 10,
     dailyKey: EDIT_WIN_DATE_KEY,
     sequence: ["brand shoot", "closeup", "product", "voiceover", "cta", "outro"]
   }
@@ -117,6 +126,9 @@ const JOE_FRAME_W = 48;
 const JOE_FRAME_H = 48;
 const JOE_SHEET_COLS = 6;
 const JOE_ANIM_FPS = 10;
+const DRIVE_TRACK_COUNT = 6;
+const AMBIENT_AUDIO_ID = "ambientTrack";
+const AMBIENT_AUDIO_VOLUME = 0.18;
 const PET_FRAME_W = 32;
 const PET_FRAME_H = 32;
 const PET_SHEET_COLS = 4;
@@ -147,6 +159,13 @@ const DRIVE_HEAD_DRAW_H = 42;
 const DRIVE_HEAD_BOB_PX = 2.4;
 const DRIVE_HEAD_BOB_SPEED = 3.4;
 const DRIVE_HEAD_DEBUG_CROSSHAIR = false;
+const FLOWER_RESPAWN_COUNT_BY_WORLD = {
+  home: 22,
+  ski: 16,
+  airport: 14,
+  restaurant: 14,
+  drive: 0
+};
 const PET_SPRITE_SOURCES = {
   cat: "assets/sprites/pets/papi_chulo_cat_32.png",
   dog: "assets/sprites/pets/rio_dog_32.png"
@@ -184,6 +203,7 @@ const bedroomArtAssets = {
   tv: { src: "assets/props/tv_stand_glow.png", image: null, loaded: false, errored: false },
   desk: { src: "assets/props/desk_macbook.png", image: null, loaded: false, errored: false },
   couch: { src: "assets/props/small_couch.png", image: null, loaded: false, errored: false },
+  carNew: { src: "assets/props/charly_car_new.png?v=20260211-carfix1", image: null, loaded: false, errored: false },
   car: { src: "assets/props/charly_car.png", image: null, loaded: false, errored: false },
   carBase: { src: "assets/props/charly_car_base.png", image: null, loaded: false, errored: false },
   carHead: { src: "assets/props/charly_head_car.png", image: null, loaded: false, errored: false },
@@ -199,12 +219,62 @@ const backgroundTileAssets = {
 };
 const destinationArtAssets = {
   skiLiftKiosk: { src: "assets/props/ski_lift_kiosk.png", image: null, loaded: false, errored: false, renderMode: "crop" },
+  skiSnowbank01: { src: "assets/props/ski/snowbank_01.png", image: null, loaded: false, errored: false },
+  skiPineTree01: { src: "assets/props/ski/pine_tree_01.png", image: null, loaded: false, errored: false },
+  skiRock01: {
+    src: "assets/props/ski/rock_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
+  skiFenceSegment01: {
+    src: "assets/props/ski/fence_segment_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: undefined
+  },
+  skiSlalomFlagRed: {
+    src: "assets/props/ski/slalom_flag_red.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
   airportDeparturesKiosk: {
     src: "assets/props/airport_departures_kiosk.png",
     image: null,
     loaded: false,
     errored: false,
     renderMode: "crop"
+  },
+  airportQueueRope01: {
+    src: "assets/props/airport/queue_rope_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
+  airportLuggageStack01: {
+    src: "assets/props/airport/luggage_stack_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
+  airportPlantPot01: {
+    src: "assets/props/airport/plant_pot_01.png",
+    image: null,
+    loaded: false,
+    errored: false
+  },
+  airportGlobeFrame01: {
+    src: "assets/props/airport/globe_frame_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: undefined
   },
   restaurantEntrance: {
     src: "assets/props/restaurant_host_counter.png",
@@ -213,12 +283,60 @@ const destinationArtAssets = {
     errored: false,
     renderMode: "crop"
   },
+  restaurantCandleTable01: {
+    src: "assets/props/restaurant/candle_table_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
+  restaurantMenuBoard01: {
+    src: "assets/props/restaurant/menu_board_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
+  restaurantPlantPot01: {
+    src: "assets/props/restaurant/plant_pot_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
+  restaurantWindow01: {
+    src: "assets/props/restaurant/window_01.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: "alpha-crop"
+  },
   rosePickup: { src: "assets/sprites/rose_pickup_48.png", image: null, loaded: false, errored: false, renderMode: "crop" },
   skiBg: { src: "assets/scenes/ski_bg_520x220.png", image: null, loaded: false, errored: false },
   slalomGate: { src: "assets/sprites/slalom_gate_48.png", image: null, loaded: false, errored: false, renderMode: "crop" },
   heartIcon: { src: "assets/ui/heart_32.png", image: null, loaded: false, errored: false, renderMode: "crop" },
   airportGlobe: { src: "assets/props/airport_globe.png", image: null, loaded: false, errored: false },
-  globeFrame: { src: "assets/ui/globe_frame_520x320.png", image: null, loaded: false, errored: false, renderMode: "alpha" },
+  restaurantMoodOverlayCozy: {
+    src: "assets/props/restaurant/mood_overlay_cozy.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: undefined
+  },
+  restaurantMoodOverlayFancy: {
+    src: "assets/props/restaurant/mood_overlay_fancy.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: undefined
+  },
+  restaurantMoodOverlayChaotic: {
+    src: "assets/props/restaurant/mood_overlay_chaotic.png",
+    image: null,
+    loaded: false,
+    errored: false,
+    renderMode: undefined
+  },
   restaurantMoodCozy: {
     src: "assets/scenes/restaurant_mood_cozy_520x320.png",
     image: null,
@@ -290,7 +408,10 @@ const state = {
   currentWorld: "home",
   activeWorldLayout: getWorldLayout("home"),
   soundOn: true,
+  ambientSoundOn: true,
   unlockedLetters: [],
+  readLetterIds: [],
+  completionPopupShown: false,
   letterUnlockQueue: [],
   drive: {
     destination: "ski",
@@ -327,7 +448,23 @@ function initCanvas() {
       btn.addEventListener("click", () => {
         openLetterBook();
       });
+      btn.style.right = "102px";
       app.appendChild(btn);
+
+      const menuBtn = document.createElement("button");
+      menuBtn.id = "gameMenuButton";
+      menuBtn.type = "button";
+      menuBtn.className = "ui-button";
+      menuBtn.textContent = "☰ Menu";
+      menuBtn.style.position = "absolute";
+      menuBtn.style.top = "8px";
+      menuBtn.style.right = "8px";
+      menuBtn.style.zIndex = "30";
+      menuBtn.style.pointerEvents = "auto";
+      menuBtn.addEventListener("click", () => {
+        openGameMenu();
+      });
+      app.appendChild(menuBtn);
     }
   }
 }
@@ -450,7 +587,8 @@ function prepareDestinationAsset(asset) {
   if (!asset?.image || asset.errored || !asset.loaded) {
     return;
   }
-  if (asset.renderMode !== "crop" && asset.renderMode !== "alpha") {
+  const mode = asset.renderMode;
+  if (mode !== "crop" && mode !== "alpha" && mode !== "alpha-crop") {
     return;
   }
   const src = asset.image;
@@ -494,6 +632,35 @@ function prepareDestinationAsset(asset) {
   const originalAlpha = new Uint8Array(w * h);
   for (let i = 0; i < w * h; i += 1) {
     originalAlpha[i] = d[i * 4 + 3];
+  }
+
+  if (mode === "alpha-crop") {
+    asset.preparedCanvas = prep;
+    asset.crop = null;
+    let minX = w;
+    let minY = h;
+    let maxX = -1;
+    let maxY = -1;
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        const a = originalAlpha[y * w + x];
+        if (a > 10) {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX >= minX && maxY >= minY) {
+      asset.crop = {
+        sx: minX,
+        sy: minY,
+        sw: maxX - minX + 1,
+        sh: maxY - minY + 1
+      };
+    }
+    return;
   }
 
   const bgThreshold = 44;
@@ -546,7 +713,7 @@ function prepareDestinationAsset(asset) {
   prepCtx.putImageData(img, 0, 0);
   asset.preparedCanvas = prep;
   asset.crop = null;
-  if (asset.renderMode === "crop") {
+  if (mode === "crop") {
     let minX = w;
     let minY = h;
     let maxX = -1;
@@ -667,13 +834,12 @@ function markPetMoved(pet) {
   anim.movingMs = PET_WALK_WINDOW_MS;
 }
 
-function todayLondonDate() {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/London",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).format(new Date());
+function todayLocalDate() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function persistFlowers() {
@@ -681,7 +847,10 @@ function persistFlowers() {
 }
 
 function persistUnlockedLetters() {
-  saveJsonArray(UNLOCKED_LETTERS_KEY, state.unlockedLetters);
+  const validIds = new Set(LOVE_LETTERS.map((letter) => letter.id));
+  const cleaned = [...new Set((state.unlockedLetters ?? []).filter((id) => typeof id === "string" && validIds.has(id)))];
+  state.unlockedLetters = cleaned;
+  saveJsonArray(UNLOCKED_LETTERS_KEY, cleaned);
 }
 
 function getLetterById(letterId) {
@@ -721,6 +890,134 @@ function getNextLetterTarget() {
   return null;
 }
 
+function openCompletionOverlay() {
+  if (state.isModalOpen || state.completionPopupShown) {
+    return;
+  }
+  state.completionPopupShown = true;
+  state.isModalOpen = true;
+  uiEl.innerHTML = "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "ui-overlay";
+  const modal = document.createElement("section");
+  modal.className = "ui-modal";
+  const title = document.createElement("h2");
+  title.className = "ui-modal-title";
+  title.textContent = "You Completed The Game";
+  const body = document.createElement("p");
+  body.className = "ui-modal-body";
+  body.style.whiteSpace = "pre-wrap";
+  body.textContent =
+    "Congrats my love.\nYou completed your little Valentine world.\nI hope you enjoyed it.\nI love you.";
+  const actions = document.createElement("div");
+  actions.className = "ui-modal-actions";
+  const continueBtn = document.createElement("button");
+  continueBtn.type = "button";
+  continueBtn.className = "ui-button primary-button";
+  continueBtn.textContent = "Continue Roaming";
+  actions.appendChild(continueBtn);
+  modal.append(title, body, actions);
+  overlay.appendChild(modal);
+  uiEl.appendChild(overlay);
+
+  const close = () => {
+    if (overlay.parentNode === uiEl) {
+      uiEl.removeChild(overlay);
+    }
+    state.isModalOpen = false;
+    state.closeOverlay = null;
+  };
+  continueBtn.addEventListener("click", close);
+  state.closeOverlay = close;
+}
+
+function maybeShowCompletionAfterLetterBookClose() {
+  if (state.completionPopupShown) {
+    return;
+  }
+  const readSet = new Set(state.readLetterIds);
+  const allRead = LOVE_LETTERS.every((letter) => readSet.has(letter.id));
+  if (allRead) {
+    openCompletionOverlay();
+  }
+}
+
+function openIntroOverlay() {
+  if (state.isModalOpen) {
+    return;
+  }
+  state.isModalOpen = true;
+  uiEl.innerHTML = "";
+
+  const pages = [
+    {
+      title: "Welcome",
+      body: "Welcome Charly.\nHappy Valentine's Day my love."
+    },
+    {
+      title: "Why I Made This",
+      body: "I made this game to give you a little world of us.\nA small gift full of memories and love."
+    },
+    {
+      title: "How It Works",
+      body: "Explore, collect roses, and visit destinations.\nAs your flower count grows, new letters unlock."
+    },
+    {
+      title: "Enjoy",
+      body: "I hope you enjoy every moment in here.\nPress Start Game when you're ready."
+    }
+  ];
+
+  const overlay = document.createElement("div");
+  overlay.className = "ui-overlay";
+  const modal = document.createElement("section");
+  modal.className = "ui-modal";
+  const title = document.createElement("h2");
+  title.className = "ui-modal-title";
+  const body = document.createElement("p");
+  body.className = "ui-modal-body";
+  body.style.whiteSpace = "pre-wrap";
+  const actions = document.createElement("div");
+  actions.className = "ui-modal-actions";
+  const nextBtn = document.createElement("button");
+  nextBtn.type = "button";
+  nextBtn.className = "ui-button primary-button";
+  actions.appendChild(nextBtn);
+  modal.append(title, body, actions);
+  overlay.appendChild(modal);
+  uiEl.appendChild(overlay);
+
+  let pageIndex = 0;
+  const close = () => {
+    if (overlay.parentNode === uiEl) {
+      uiEl.removeChild(overlay);
+    }
+    state.isModalOpen = false;
+    state.closeOverlay = null;
+  };
+
+  const renderPage = () => {
+    const page = pages[pageIndex];
+    title.textContent = page.title;
+    body.textContent = page.body;
+    const isLast = pageIndex === pages.length - 1;
+    nextBtn.textContent = isLast ? "Start Game" : "Next";
+  };
+
+  nextBtn.addEventListener("click", () => {
+    if (pageIndex < pages.length - 1) {
+      pageIndex += 1;
+      renderPage();
+      return;
+    }
+    close();
+  });
+
+  state.closeOverlay = close;
+  renderPage();
+}
+
 function openLetterBook(initialLetterId = null) {
   if (state.isModalOpen) {
     return;
@@ -756,6 +1053,7 @@ function openLetterBook(initialLetterId = null) {
     }
     state.isModalOpen = false;
     state.closeOverlay = null;
+    maybeShowCompletionAfterLetterBookClose();
   };
 
   const onEsc = (event) => {
@@ -792,6 +1090,9 @@ function openLetterBook(initialLetterId = null) {
   }
 
   function renderReader(letter) {
+    if (letter?.id && !state.readLetterIds.includes(letter.id)) {
+      state.readLetterIds.push(letter.id);
+    }
     content.innerHTML = "";
     const letterTitle = document.createElement("h3");
     letterTitle.className = "ui-modal-title";
@@ -823,6 +1124,101 @@ function openLetterBook(initialLetterId = null) {
     }
   }
   renderList();
+}
+
+function openGameMenu() {
+  if (state.isModalOpen) {
+    return;
+  }
+
+  state.isModalOpen = true;
+  uiEl.innerHTML = "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "ui-overlay";
+  const modal = document.createElement("section");
+  modal.className = "ui-modal";
+
+  const title = document.createElement("h2");
+  title.className = "ui-modal-title";
+  title.textContent = "Menu";
+  const body = document.createElement("p");
+  body.className = "scene-subtext";
+  body.textContent = "Quick controls";
+
+  const actions = document.createElement("div");
+  actions.className = "ui-modal-actions";
+  actions.style.justifyContent = "flex-start";
+
+  const roomBtn = document.createElement("button");
+  roomBtn.type = "button";
+  roomBtn.className = "ui-button";
+  roomBtn.textContent = "Go Back To Room";
+
+  const homeBtn = document.createElement("button");
+  homeBtn.type = "button";
+  homeBtn.className = "ui-button";
+  homeBtn.textContent = "Home Driveway";
+
+  const skiBtn = document.createElement("button");
+  skiBtn.type = "button";
+  skiBtn.className = "ui-button";
+  skiBtn.textContent = "Teleport Ski";
+
+  const airportBtn = document.createElement("button");
+  airportBtn.type = "button";
+  airportBtn.className = "ui-button";
+  airportBtn.textContent = "Teleport Airport";
+
+  const restaurantBtn = document.createElement("button");
+  restaurantBtn.type = "button";
+  restaurantBtn.className = "ui-button";
+  restaurantBtn.textContent = "Teleport Restaurant";
+
+  const musicBtn = document.createElement("button");
+  musicBtn.type = "button";
+  musicBtn.className = "ui-button";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "ui-button secondary-button";
+  closeBtn.textContent = "Close";
+
+  actions.append(roomBtn, homeBtn, skiBtn, airportBtn, restaurantBtn, musicBtn, closeBtn);
+  modal.append(title, body, actions);
+  overlay.appendChild(modal);
+  uiEl.appendChild(overlay);
+
+  const refreshMusicLabel = () => {
+    musicBtn.textContent = state.ambientSoundOn ? "BG Music: On" : "BG Music: Off";
+  };
+
+  const close = () => {
+    if (overlay.parentNode === uiEl) {
+      uiEl.removeChild(overlay);
+    }
+    state.isModalOpen = false;
+    state.closeOverlay = null;
+  };
+
+  const teleport = (worldName, spawnKey) => {
+    close();
+    setWorld(worldName, spawnKey);
+  };
+
+  roomBtn.addEventListener("click", () => teleport("home", "default"));
+  homeBtn.addEventListener("click", () => teleport("home", "driveway"));
+  skiBtn.addEventListener("click", () => teleport("ski", "fromCar"));
+  airportBtn.addEventListener("click", () => teleport("airport", "fromCar"));
+  restaurantBtn.addEventListener("click", () => teleport("restaurant", "fromCar"));
+  musicBtn.addEventListener("click", () => {
+    state.ambientSoundOn = !state.ambientSoundOn;
+    refreshMusicLabel();
+    syncAmbientTrack();
+  });
+  closeBtn.addEventListener("click", close);
+  state.closeOverlay = close;
+  refreshMusicLabel();
 }
 
 function openLetterUnlockOverlay(letterId) {
@@ -898,12 +1294,56 @@ function addFloater(text, tileX, tileY) {
 }
 
 function loadPersistentState() {
+  if (RESET_PROGRESS_ON_PAGE_LOAD) {
+    const resetKeys = [
+      TOTAL_FLOWERS_KEY,
+      COLLECTED_FLOWER_IDS_KEY,
+      PETTED_PET_IDS_KEY,
+      MOVIE_LAST_CLAIM_DATE_KEY,
+      PIMPLE_CLAIM_DATE_KEY,
+      PIMPLE_TODAY_COUNT_KEY,
+      SKI_LAST_CLAIM_DATE_KEY,
+      RESTAURANT_WIN_DATE_KEY,
+      EDIT_WIN_DATE_KEY,
+      UNLOCKED_LETTERS_KEY
+    ];
+    for (const key of [...resetKeys, ...STALE_LETTER_TEXT_KEYS]) {
+      localStorage.removeItem(key);
+    }
+    state.flowers = 0;
+    state.collectedFlowerIds = [];
+    state.pettedPetIds = [];
+    state.unlockedLetters = [];
+    state.readLetterIds = [];
+    state.completionPopupShown = false;
+    state.letterUnlockQueue = [];
+    return;
+  }
+
   const total = Number.parseInt(localStorage.getItem(TOTAL_FLOWERS_KEY) ?? "0", 10);
   state.flowers = Number.isFinite(total) ? total : 0;
 
   state.collectedFlowerIds = loadJsonArray(COLLECTED_FLOWER_IDS_KEY);
   state.pettedPetIds = loadJsonArray(PETTED_PET_IDS_KEY);
-  state.unlockedLetters = loadJsonArray(UNLOCKED_LETTERS_KEY);
+  const validIds = new Set(LOVE_LETTERS.map((letter) => letter.id));
+  const rawUnlockedLetters = loadJsonArray(UNLOCKED_LETTERS_KEY);
+  state.unlockedLetters = [...new Set(
+    rawUnlockedLetters
+      .map((entry) => {
+        if (typeof entry === "string") {
+          return entry;
+        }
+        if (entry && typeof entry === "object" && typeof entry.id === "string") {
+          return entry.id;
+        }
+        return null;
+      })
+      .filter((id) => id && validIds.has(id))
+  )];
+  for (const key of STALE_LETTER_TEXT_KEYS) {
+    localStorage.removeItem(key);
+  }
+  persistUnlockedLetters();
   const collectedSet = new Set(state.collectedFlowerIds);
 
   for (const layout of Object.values(worldLayouts)) {
@@ -1025,6 +1465,51 @@ function placeCompanionNearPlayer() {
   }
 }
 
+function regenerateFlowersForWorld(layout, worldName) {
+  if (!layout) {
+    return;
+  }
+  const targetCount = FLOWER_RESPAWN_COUNT_BY_WORLD[worldName] ?? 0;
+  if (targetCount <= 0) {
+    layout.flowerPickups = [];
+    return;
+  }
+
+  const candidateTiles = [];
+  for (let y = 1; y < layout.height - 1; y += 1) {
+    for (let x = 1; x < layout.width - 1; x += 1) {
+      if (isBlockedTile(x, y, layout)) {
+        continue;
+      }
+      if (x === state.player.x && y === state.player.y) {
+        continue;
+      }
+      if (x === state.companion.x && y === state.companion.y) {
+        continue;
+      }
+      if (Array.isArray(state.pets) && state.pets.some((pet) => pet.x === x && pet.y === y)) {
+        continue;
+      }
+      candidateTiles.push({ x, y });
+    }
+  }
+
+  for (let i = candidateTiles.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = candidateTiles[i];
+    candidateTiles[i] = candidateTiles[j];
+    candidateTiles[j] = tmp;
+  }
+
+  const seed = `${worldName}-${Date.now().toString(36)}`;
+  const spawnCount = Math.min(targetCount, candidateTiles.length);
+  layout.flowerPickups = candidateTiles.slice(0, spawnCount).map((tile, index) => ({
+    id: `dyn-flower-${seed}-${index}`,
+    x: tile.x,
+    y: tile.y
+  }));
+}
+
 function setWorld(worldName, spawnKey = "default") {
   const layout = getWorldLayout(worldName);
   if (!layout) {
@@ -1062,6 +1547,8 @@ function setWorld(worldName, spawnKey = "default") {
   } else {
     state.pets = [];
   }
+
+  regenerateFlowersForWorld(layout, worldName);
 
   const worldPixelW = layout.width * state.tileSize;
   const worldPixelH = layout.height * state.tileSize;
@@ -1257,6 +1744,8 @@ function updatePets(deltaTime) {
 }
 
 function update(deltaTime) {
+  syncAmbientTrack();
+
   for (const floater of state.floaters) {
     floater.age += deltaTime;
   }
@@ -1389,11 +1878,7 @@ function openReturnHomeConfirm() {
 }
 
 function stopAllDriveTracks() {
-  const tracks = [
-    document.getElementById("driveTrack1"),
-    document.getElementById("driveTrack2"),
-    document.getElementById("driveTrack3")
-  ].filter(Boolean);
+  const tracks = Array.from({ length: DRIVE_TRACK_COUNT }, (_, i) => document.getElementById(`driveTrack${i + 1}`)).filter(Boolean);
 
   for (const track of tracks) {
     track.pause();
@@ -1418,6 +1903,29 @@ function playDriveTrack(index) {
   }
 }
 
+function syncAmbientTrack() {
+  const ambient = document.getElementById(AMBIENT_AUDIO_ID);
+  if (!ambient) {
+    return;
+  }
+  ambient.loop = true;
+  ambient.volume = AMBIENT_AUDIO_VOLUME;
+
+  const shouldPlay = state.soundOn && state.ambientSoundOn && !state.isModalOpen && state.currentWorld !== "drive";
+  if (shouldPlay) {
+    if (ambient.paused) {
+      const playPromise = ambient.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
+    }
+    return;
+  }
+  if (!ambient.paused) {
+    ambient.pause();
+  }
+}
+
 function openDriveScene() {
   if (state.isModalOpen) {
     return;
@@ -1427,7 +1935,7 @@ function openDriveScene() {
   state.activeWorldLayout = getWorldLayout("drive");
   state.drive = {
     destination: "ski",
-    remainingMs: 15000,
+    remainingMs: 25000,
     selectedTrack: 0,
     soundOn: state.soundOn
   };
@@ -1471,11 +1979,11 @@ function openDriveScene() {
   const musicRow = document.createElement("div");
   musicRow.className = "music-picker";
 
-  const trackButtons = [1, 2, 3].map((n, idx) => {
+  const trackButtons = Array.from({ length: DRIVE_TRACK_COUNT }, (_, idx) => {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "ui-button";
-    btn.textContent = `Track ${n}`;
+    btn.textContent = `Track ${idx + 1}`;
     btn.addEventListener("click", () => {
       state.drive.selectedTrack = idx;
       updateButtons();
@@ -1502,7 +2010,7 @@ function openDriveScene() {
   const skipBtn = document.createElement("button");
   skipBtn.type = "button";
   skipBtn.className = "ui-button primary-button";
-  skipBtn.textContent = "Skip";
+  skipBtn.textContent = "Skip to Destination";
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
@@ -1525,7 +2033,7 @@ function openDriveScene() {
       btn.classList.toggle("chip-selected", i === state.drive.selectedTrack);
     });
     soundBtn.textContent = state.drive.soundOn ? "🔈 Sound on" : "🔇 Sound off";
-    status.textContent = `Destination: ${state.drive.destination.toUpperCase()} • ${Math.ceil(state.drive.remainingMs / 1000)}s`;
+    status.textContent = `Time left: ${Math.ceil(state.drive.remainingMs / 1000)}s`;
   }
 
   skiBtn.addEventListener("click", () => {
@@ -2095,7 +2603,7 @@ function openMovieScene() {
       return;
     }
     rewardResolved = true;
-    const today = todayLondonDate();
+    const today = todayLocalDate();
     const already = localStorage.getItem(MINI_GAMES.movie.dailyKey) === today;
     if (!already) {
       state.flowers += MINI_GAMES.movie.rewardFlowers;
@@ -2827,7 +3335,7 @@ function openVideoEditScene() {
       return;
     }
     rewarded = true;
-    const today = todayLondonDate();
+    const today = todayLocalDate();
     const already = localStorage.getItem(MINI_GAMES.edit.dailyKey) === today;
     rewardAlready = already;
     if (!already) {
@@ -3071,7 +3579,7 @@ function openPimpleScene() {
   }
 
   function rewardedPop() {
-    const today = todayLondonDate();
+    const today = todayLocalDate();
     const claimDate = localStorage.getItem(PIMPLE_CLAIM_DATE_KEY);
     let todayCount = Number.parseInt(localStorage.getItem(PIMPLE_TODAY_COUNT_KEY) ?? "0", 10);
     if (claimDate !== today) {
@@ -3498,17 +4006,11 @@ function openSkiScene() {
   function conclude() {
     done = true;
     const finalHearts = Math.max(0, hearts - hits);
-    const today = todayLondonDate();
+    const today = todayLocalDate();
     const already = localStorage.getItem(SKI_LAST_CLAIM_DATE_KEY) === today;
     reward = 0;
     if (!already) {
-      if (finalHearts >= 8) {
-        reward = 6;
-      } else if (finalHearts >= 4) {
-        reward = 3;
-      } else {
-        reward = 1;
-      }
+      reward = 10;
       state.flowers += reward;
       persistFlowers();
       localStorage.setItem(SKI_LAST_CLAIM_DATE_KEY, today);
@@ -3742,7 +4244,7 @@ function openGlobeScene() {
 
   const title = document.createElement("h2");
   title.className = "ui-modal-title";
-  title.textContent = "Our Places";
+  title.textContent = "Our Map";
 
   const canvasScene = document.createElement("canvas");
   canvasScene.className = "scene-canvas";
@@ -3778,19 +4280,7 @@ function openGlobeScene() {
   const caption = document.createElement("p");
   caption.className = "scene-hint";
 
-  const carousel = document.createElement("div");
-  carousel.className = "carousel-controls";
-  const prevBtn = document.createElement("button");
-  prevBtn.type = "button";
-  prevBtn.className = "ui-button";
-  prevBtn.textContent = "Prev";
-  const nextBtn = document.createElement("button");
-  nextBtn.type = "button";
-  nextBtn.className = "ui-button";
-  nextBtn.textContent = "Next";
-  carousel.append(prevBtn, nextBtn);
-
-  right.append(toggleRow, destinationList, frame, carousel, caption);
+  right.append(toggleRow, destinationList, frame, caption);
   left.appendChild(canvasScene);
   wrap.append(left, right);
 
@@ -3811,16 +4301,18 @@ function openGlobeScene() {
   uiEl.appendChild(overlay);
 
   const visited = [
+    { id: "uk", label: "UK", caption: "Little everyday memories.", lon: -1.5, lat: 52.4 },
+    { id: "spain", label: "Spain", caption: "Golden light and warm evenings.", lon: -3.7, lat: 40.4 },
+    { id: "ghana", label: "Ghana", caption: "Sun, smiles, and family warmth.", lon: -1.0, lat: 7.9 },
+    { id: "france", label: "France", caption: "City walks and rainy kisses.", lon: 2.2, lat: 46.2 },
+    { id: "colombia", label: "Colombia", caption: "Colorful streets and laughter.", lon: -74.3, lat: 4.6 },
+    { id: "uae", label: "UAE", caption: "Bright days and beach moments.", lon: 54.4, lat: 24.3 },
+    { id: "finland", label: "Finland", caption: "Snow, quiet, and closeness.", lon: 25.7, lat: 61.9 },
+    { id: "vietnam", label: "Vietnam", caption: "Adventure on the water.", lon: 108.3, lat: 14.1 },
+    { id: "croatia", label: "Croatia", caption: "Coastline sunsets and calm air.", lon: 15.2, lat: 45.1 },
     { id: "lebanon", label: "Lebanon", caption: "Home roots and loud laughter.", lon: 35.9, lat: 33.9 },
-    { id: "uae", label: "UAE", caption: "Desert lights and late drives.", lon: 54.4, lat: 24.3 },
-    { id: "egypt", label: "Egypt", caption: "History and warm evenings.", lon: 30.8, lat: 26.8 },
-    { id: "finland", label: "Finland", caption: "Cold air and clean silence.", lon: 25.7, lat: 61.9 },
-    { id: "vietnam", label: "Vietnam", caption: "Street food and soft rain.", lon: 108.3, lat: 14.1 },
-    { id: "colombia", label: "Colombia", caption: "Colorful streets and rhythm.", lon: -74.3, lat: 4.6 },
     { id: "peru", label: "Peru", caption: "Mountain views and deep breaths.", lon: -75.0, lat: -9.2 },
-    { id: "ghana", label: "Ghana", caption: "Sun, music, and family warmth.", lon: -1.0, lat: 7.9 },
-    { id: "spain", label: "Spain", caption: "Slow dinners and good light.", lon: -3.7, lat: 40.4 },
-    { id: "uk", label: "UK", caption: "City rain and familiar steps.", lon: -1.5, lat: 52.4 }
+    { id: "egypt", label: "Egypt", caption: "History and warm evenings.", lon: 30.8, lat: 26.8 }
   ];
 
   const wishlist = [
@@ -3830,23 +4322,50 @@ function openGlobeScene() {
     { id: "chamonix", label: "Chamonix", caption: "Sharp peaks, calm mornings.", lon: 6.9, lat: 45.9 },
     { id: "patagonia", label: "Patagonia", caption: "Wind, sky, and open space.", lon: -72.7, lat: -49.3 }
   ];
+  const destinationPhotoFiles = {
+    uk: "assets/content/photos/visited/uk.jpeg",
+    spain: "assets/content/photos/visited/spain.jpeg",
+    ghana: "assets/content/photos/visited/ghana.jpeg",
+    france: "assets/content/photos/visited/france.jpeg",
+    colombia: "assets/content/photos/visited/colombia.jpeg",
+    uae: "assets/content/photos/visited/uae.jpeg",
+    finland: "assets/content/photos/visited/finland.jpeg",
+    vietnam: "assets/content/photos/visited/vietnam.jpeg",
+    croatia: "assets/content/photos/visited/croatia.jpeg",
+    lebanon: "assets/content/photos/visited/lebanon.jpeg",
+    peru: "assets/content/photos/visited/peru.jpeg",
+    egypt: "assets/content/photos/visited/egypt.jpg"
+  };
+  const wishlistPhotoFiles = {
+    "new-caledonia": "assets/content/photos/wishlist/new_caledonia.jpg",
+    philippines: "assets/content/photos/wishlist/philippines.jpg",
+    japan: "assets/content/photos/wishlist/japan.jpg",
+    chamonix: "assets/content/photos/wishlist/chamonix.jpg",
+    patagonia: "assets/content/photos/wishlist/patagonia.jpg"
+  };
+  const wishlistPhotoFallbackUrls = {
+    "new-caledonia": "https://commons.wikimedia.org/wiki/Special:FilePath/New_Caledonia_lagoon.jpg",
+    philippines: "https://commons.wikimedia.org/wiki/Special:FilePath/Chocolate_Hills_Bohol_Philippines.jpg",
+    japan: "https://commons.wikimedia.org/wiki/Special:FilePath/Mount_Fuji_from_Lake_Kawaguchi.jpg",
+    chamonix: "https://commons.wikimedia.org/wiki/Special:FilePath/Powder_skiing_in_Chamonix_Mont_Blanc.JPG",
+    patagonia: "https://commons.wikimedia.org/wiki/Special:FilePath/Fitz_Roy%2C_El_Chalten%2C_Patagonia.jpg"
+  };
 
   let showingWishlist = false;
   let current = visited[0];
-  let photoIndex = 1;
-  let globeRotationDeg = 0;
+  let mapPanDeg = 0;
   let dragging = false;
   let dragStartX = 0;
   let dragOriginX = 0;
   let dragOriginY = 0;
   let dragMoved = false;
   const markerScreenPoints = [];
-  const GLOBE_CANVAS_W = canvasScene.width;
-  const GLOBE_CANVAS_H = canvasScene.height;
-  const GLOBE_TARGET_WIDTH = 384;
-  const GLOBE_TARGET_HEIGHT = 192;
-  const GLOBE_LOWER_Y_OFFSET = 12;
-  const DRAG_PX_TO_ROTATION_DEG = 0.72;
+  const MAP_CANVAS_W = canvasScene.width;
+  const MAP_CANVAS_H = canvasScene.height;
+  const MAP_TARGET_WIDTH = 470;
+  const MAP_TARGET_HEIGHT = 178;
+  const MAP_LOWER_Y_OFFSET = 14;
+  const DRAG_PX_TO_LONGITUDE_DEG = 0.8;
   const MARKER_ALIGNMENT_WINDOW_DEG = 26;
 
   function normalizeDeg(value) {
@@ -3866,31 +4385,19 @@ function openGlobeScene() {
       return null;
     }
     return {
-      x: ((event.clientX - rect.left) / rect.width) * GLOBE_CANVAS_W,
-      y: ((event.clientY - rect.top) / rect.height) * GLOBE_CANVAS_H
+      x: ((event.clientX - rect.left) / rect.width) * MAP_CANVAS_W,
+      y: ((event.clientY - rect.top) / rect.height) * MAP_CANVAS_H
     };
   }
 
-  function getGlobeRect() {
-    const globeAsset = destinationArtAssets.airportGlobe;
-    let sourceWidth = GLOBE_TARGET_WIDTH;
-    let sourceHeight = GLOBE_TARGET_HEIGHT;
-    if (globeAsset.loaded && globeAsset.image && !globeAsset.errored) {
-      sourceWidth = globeAsset.image.naturalWidth || globeAsset.image.width || sourceWidth;
-      sourceHeight = globeAsset.image.naturalHeight || globeAsset.image.height || sourceHeight;
-    }
-    const safeRatio = sourceHeight > 0 ? sourceWidth / sourceHeight : GLOBE_TARGET_WIDTH / GLOBE_TARGET_HEIGHT;
-    const maxW = GLOBE_CANVAS_W - 28;
-    const maxH = GLOBE_CANVAS_H - 24;
-    let drawW = Math.min(maxW, GLOBE_TARGET_WIDTH);
-    let drawH = drawW / safeRatio;
-    if (drawH > maxH) {
-      drawH = maxH;
-      drawW = drawH * safeRatio;
-    }
-    const drawX = (GLOBE_CANVAS_W - drawW) / 2;
-    let drawY = (GLOBE_CANVAS_H - drawH) / 2 + GLOBE_LOWER_Y_OFFSET;
-    drawY = clamp(drawY, 8, GLOBE_CANVAS_H - drawH - 8);
+  function getMapRect() {
+    const maxW = MAP_CANVAS_W - 28;
+    const maxH = MAP_CANVAS_H - 24;
+    let drawW = Math.min(maxW, MAP_TARGET_WIDTH);
+    let drawH = Math.min(maxH, MAP_TARGET_HEIGHT);
+    const drawX = (MAP_CANVAS_W - drawW) / 2;
+    let drawY = (MAP_CANVAS_H - drawH) / 2 + MAP_LOWER_Y_OFFSET;
+    drawY = clamp(drawY, 8, MAP_CANVAS_H - drawH - 8);
     return { x: drawX, y: drawY, w: drawW, h: drawH };
   }
 
@@ -3907,7 +4414,6 @@ function openGlobeScene() {
       chip.textContent = item.label;
       chip.addEventListener("click", () => {
         current = item;
-        photoIndex = 1;
         refreshDestinations();
         refreshPhoto();
       });
@@ -3922,56 +4428,231 @@ function openGlobeScene() {
 
   function refreshPhoto() {
     frame.innerHTML = "";
+    const source = showingWishlist ? wishlistPhotoFiles[current.id] : destinationPhotoFiles[current.id];
+    if (!source) {
+      frame.innerHTML = `<div class="globe-photo-placeholder">${current.label}<br/>Photo coming soon</div>`;
+      caption.textContent = current.caption;
+      return;
+    }
     const img = document.createElement("img");
     img.className = "globe-photo";
     img.alt = current.label;
-    img.src = `assets/photos/${current.id}/${photoIndex}.jpg`;
+    img.src = source;
+    // Force full-image fit inside the frame (no crop) even if stale CSS is cached.
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.style.width = "auto";
+    img.style.height = "auto";
+    img.style.objectFit = "contain";
+    img.style.objectPosition = "center center";
     img.onerror = () => {
-      frame.innerHTML = `<div class=\"globe-photo-placeholder\">${current.label}<br/>Photo ${photoIndex} coming soon</div>`;
+      if (showingWishlist) {
+        const fallbackUrl = wishlistPhotoFallbackUrls[current.id];
+        if (fallbackUrl && img.src !== fallbackUrl) {
+          img.src = fallbackUrl;
+          return;
+        }
+      }
+      frame.innerHTML = `<div class="globe-photo-placeholder">${current.label}<br/>Photo coming soon</div>`;
     };
     frame.appendChild(img);
     caption.textContent = current.caption;
   }
 
-  function getVisibleMarkerPoint(item, globeRect) {
-    const relLon = normalizeDeg(item.lon + globeRotationDeg);
-    const lonRad = (relLon * Math.PI) / 180;
-    const latRad = ((item.lat || 0) * Math.PI) / 180;
-    const depth = Math.cos(lonRad);
-    if (depth <= 0.04) {
-      return null;
-    }
-    const cx = globeRect.x + globeRect.w / 2;
-    const cy = globeRect.y + globeRect.h / 2;
-    const rx = globeRect.w * 0.45;
-    const ry = globeRect.h * 0.44;
-    const x = cx + Math.sin(lonRad) * rx * Math.cos(latRad);
-    const y = cy - Math.sin(latRad) * ry + (1 - depth) * 3.5;
+  function lonToMapX(lon, mapRect) {
+    const relLon = normalizeDeg(lon - mapPanDeg);
+    return mapRect.x + ((relLon + 180) / 360) * mapRect.w;
+  }
+
+  function latToMapY(lat, mapRect) {
+    const clampedLat = clamp(lat ?? 0, -85, 85);
+    return mapRect.y + ((85 - clampedLat) / 170) * mapRect.h;
+  }
+
+  function getVisibleMarkerPoint(item, mapRect) {
+    const relLon = normalizeDeg(item.lon - mapPanDeg);
+    const x = lonToMapX(item.lon, mapRect);
+    const y = latToMapY(item.lat || 0, mapRect);
     const glowStrength = Math.max(0, 1 - Math.abs(relLon) / MARKER_ALIGNMENT_WINDOW_DEG);
     return {
       item,
       x,
       y,
-      depth,
       glowStrength,
       radius: showingWishlist ? 4.2 : 3.7
     };
   }
 
-  function drawGlobeFallback(globeRect) {
-    sceneCtx.fillStyle = "#20343f";
-    sceneCtx.fillRect(0, 0, GLOBE_CANVAS_W, GLOBE_CANVAS_H);
-    const cx = globeRect.x + globeRect.w / 2;
-    const cy = globeRect.y + globeRect.h / 2;
-    sceneCtx.fillStyle = "#5f8fa2";
-    sceneCtx.beginPath();
-    sceneCtx.ellipse(cx, cy, globeRect.w * 0.48, globeRect.h * 0.47, 0, 0, Math.PI * 2);
-    sceneCtx.fill();
-    sceneCtx.strokeStyle = "rgba(243, 252, 255, 0.4)";
+  function pointInPolygon(x, y, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+      const xi = polygon[i][0];
+      const yi = polygon[i][1];
+      const xj = polygon[j][0];
+      const yj = polygon[j][1];
+      const intersects = ((yi > y) !== (yj > y))
+        && (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-9) + xi);
+      if (intersects) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
+  const MAP_LAND_REGIONS = [
+    {
+      key: "north-america",
+      color: "#89ad86",
+      coast: "#b2cfac",
+      polygon: [
+        [-168, 71], [-152, 64], [-140, 58], [-130, 54], [-124, 49], [-119, 43], [-114, 33],
+        [-108, 29], [-100, 24], [-93, 20], [-84, 22], [-78, 28], [-74, 37], [-68, 45], [-64, 53],
+        [-74, 59], [-88, 63], [-108, 67], [-128, 71], [-148, 73]
+      ]
+    },
+    {
+      key: "greenland",
+      color: "#a8c5a3",
+      coast: "#d4e5d0",
+      polygon: [[-73, 82], [-56, 81], [-40, 77], [-33, 71], [-40, 66], [-53, 62], [-64, 64], [-72, 70]]
+    },
+    {
+      key: "south-america",
+      color: "#84a57f",
+      coast: "#accaa7",
+      polygon: [
+        [-81, 12], [-74, 8], [-70, 2], [-67, -6], [-63, -14], [-59, -24], [-56, -33], [-52, -42],
+        [-48, -50], [-40, -54], [-34, -49], [-35, -37], [-39, -27], [-44, -17], [-50, -8], [-58, 1], [-69, 8]
+      ]
+    },
+    {
+      key: "europe",
+      color: "#94b58f",
+      coast: "#c5dbc1",
+      polygon: [[-10, 36], [-5, 43], [2, 49], [12, 55], [22, 58], [32, 55], [36, 50], [30, 44], [22, 40], [10, 37], [0, 36]]
+    },
+    {
+      key: "africa",
+      color: "#83a47d",
+      coast: "#b2cdab",
+      polygon: [
+        [-17, 36], [-5, 34], [8, 36], [20, 33], [31, 28], [39, 20], [45, 11], [47, 2], [43, -10],
+        [35, -23], [25, -32], [13, -35], [5, -30], [-1, -19], [-7, -4], [-11, 9], [-15, 22]
+      ]
+    },
+    {
+      key: "asia",
+      color: "#7d9f77",
+      coast: "#abc8a4",
+      polygon: [
+        [30, 40], [42, 48], [58, 56], [78, 61], [98, 59], [118, 55], [136, 51], [151, 47], [160, 42],
+        [158, 34], [148, 27], [137, 23], [126, 18], [116, 12], [104, 8], [91, 11], [82, 19], [73, 26],
+        [64, 30], [54, 33], [45, 34], [35, 36]
+      ]
+    },
+    {
+      key: "arabia-india",
+      color: "#80a179",
+      coast: "#aecba7",
+      polygon: [[40, 30], [51, 29], [60, 24], [69, 21], [77, 16], [83, 10], [80, 6], [71, 7], [63, 14], [55, 18], [48, 22], [42, 26]]
+    },
+    {
+      key: "australia",
+      color: "#93b58d",
+      coast: "#c7ddc3",
+      polygon: [[112, -12], [123, -10], [136, -13], [147, -20], [153, -29], [150, -37], [139, -42], [125, -40], [114, -33], [110, -23]]
+    },
+    {
+      key: "japan",
+      color: "#92b48d",
+      coast: "#c8ddc4",
+      polygon: [[130, 31], [135, 34], [141, 39], [146, 43], [144, 35], [138, 31], [133, 30]]
+    }
+  ];
+
+  function drawWorldMap(mapRect) {
+    const oceanGradient = sceneCtx.createLinearGradient(0, mapRect.y, 0, mapRect.y + mapRect.h);
+    oceanGradient.addColorStop(0, "#5f8895");
+    oceanGradient.addColorStop(1, "#4c7380");
+    sceneCtx.fillStyle = oceanGradient;
+    sceneCtx.fillRect(mapRect.x, mapRect.y, mapRect.w, mapRect.h);
+
+    const pixel = 4;
+    const cols = Math.max(40, Math.floor(mapRect.w / pixel));
+    const rows = Math.max(20, Math.floor(mapRect.h / pixel));
+    const landKeys = Array.from({ length: rows }, () => Array(cols).fill(null));
+
+    for (let row = 0; row < rows; row += 1) {
+      const lat = 85 - ((row + 0.5) / rows) * 170;
+      for (let col = 0; col < cols; col += 1) {
+        const relLon = -180 + ((col + 0.5) / cols) * 360;
+        const worldLon = normalizeDeg(relLon + mapPanDeg);
+        let regionKey = null;
+        for (const region of MAP_LAND_REGIONS) {
+          if (pointInPolygon(worldLon, lat, region.polygon)) {
+            regionKey = region.key;
+            break;
+          }
+        }
+        landKeys[row][col] = regionKey;
+      }
+    }
+
+    const regionByKey = new Map(MAP_LAND_REGIONS.map((r) => [r.key, r]));
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const key = landKeys[row][col];
+        if (!key) {
+          continue;
+        }
+        const region = regionByKey.get(key);
+        if (!region) {
+          continue;
+        }
+        const x = Math.round(mapRect.x + (col / cols) * mapRect.w);
+        const y = Math.round(mapRect.y + (row / rows) * mapRect.h);
+        const w = Math.ceil(mapRect.w / cols);
+        const h = Math.ceil(mapRect.h / rows);
+
+        let isCoast = false;
+        for (let dy = -1; dy <= 1 && !isCoast; dy += 1) {
+          for (let dx = -1; dx <= 1 && !isCoast; dx += 1) {
+            if (!dx && !dy) {
+              continue;
+            }
+            const rr = row + dy;
+            const cc = col + dx;
+            if (rr < 0 || rr >= rows || cc < 0 || cc >= cols || !landKeys[rr][cc]) {
+              isCoast = true;
+            }
+          }
+        }
+
+        sceneCtx.fillStyle = isCoast ? region.coast : region.color;
+        sceneCtx.fillRect(x, y, w, h);
+      }
+    }
+
+    sceneCtx.strokeStyle = "rgba(230, 243, 246, 0.2)";
+    sceneCtx.lineWidth = 1;
+    for (let i = 1; i <= 5; i += 1) {
+      const gy = mapRect.y + (mapRect.h * i) / 6;
+      sceneCtx.beginPath();
+      sceneCtx.moveTo(mapRect.x, gy);
+      sceneCtx.lineTo(mapRect.x + mapRect.w, gy);
+      sceneCtx.stroke();
+    }
+    for (let i = 1; i <= 7; i += 1) {
+      const gx = mapRect.x + (mapRect.w * i) / 8;
+      sceneCtx.beginPath();
+      sceneCtx.moveTo(gx, mapRect.y);
+      sceneCtx.lineTo(gx, mapRect.y + mapRect.h);
+      sceneCtx.stroke();
+    }
+
+    sceneCtx.strokeStyle = "rgba(239, 249, 251, 0.5)";
     sceneCtx.lineWidth = 2;
-    sceneCtx.beginPath();
-    sceneCtx.ellipse(cx, cy, globeRect.w * 0.42, globeRect.h * 0.18, 0, 0, Math.PI * 2);
-    sceneCtx.stroke();
+    sceneCtx.strokeRect(Math.round(mapRect.x) + 0.5, Math.round(mapRect.y) + 0.5, Math.round(mapRect.w), Math.round(mapRect.h));
   }
 
   function drawAirportPair() {
@@ -4019,30 +4700,26 @@ function openGlobeScene() {
     }
   }
 
-  function drawGlobe() {
+  function drawMap() {
     markerScreenPoints.length = 0;
-    const skyGradient = sceneCtx.createLinearGradient(0, 0, 0, GLOBE_CANVAS_H);
-    skyGradient.addColorStop(0, "#2a3c49");
-    skyGradient.addColorStop(1, "#1e2d37");
+    const skyGradient = sceneCtx.createLinearGradient(0, 0, 0, MAP_CANVAS_H);
+    skyGradient.addColorStop(0, "#314853");
+    skyGradient.addColorStop(1, "#243741");
     sceneCtx.fillStyle = skyGradient;
-    sceneCtx.fillRect(0, 0, GLOBE_CANVAS_W, GLOBE_CANVAS_H);
+    sceneCtx.fillRect(0, 0, MAP_CANVAS_W, MAP_CANVAS_H);
 
-    const globeRect = getGlobeRect();
-    const globeAsset = destinationArtAssets.airportGlobe;
-    if (globeAsset.loaded && globeAsset.image && !globeAsset.errored) {
-      sceneCtx.drawImage(globeAsset.image, globeRect.x, globeRect.y, globeRect.w, globeRect.h);
-    } else {
-      drawGlobeFallback(globeRect);
+    const mapRect = getMapRect();
+    const frameAsset = destinationArtAssets.airportGlobeFrame01;
+    if (frameAsset.loaded && frameAsset.image && !frameAsset.errored) {
+      sceneCtx.drawImage(frameAsset.image, mapRect.x - 10, mapRect.y - 8, mapRect.w + 20, mapRect.h + 16);
     }
+    drawWorldMap(mapRect);
 
     const markers = showingWishlist ? wishlist : visited;
     const markerColor = showingWishlist ? "#9fe6ff" : "#ffe3b3";
     const glowColor = showingWishlist ? "rgba(159, 230, 255, 0.95)" : "rgba(255, 210, 156, 0.95)";
     for (const item of markers) {
-      const point = getVisibleMarkerPoint(item, globeRect);
-      if (!point) {
-        continue;
-      }
+      const point = getVisibleMarkerPoint(item, mapRect);
       markerScreenPoints.push(point);
       const selected = point.item.id === current.id;
       sceneCtx.save();
@@ -4112,8 +4789,8 @@ function openGlobeScene() {
       dragMoved = true;
     }
     dragStartX = p.x;
-    globeRotationDeg += dx * DRAG_PX_TO_ROTATION_DEG;
-    globeRotationDeg = normalizeDeg(globeRotationDeg);
+    mapPanDeg -= dx * DRAG_PX_TO_LONGITUDE_DEG;
+    mapPanDeg = normalizeDeg(mapPanDeg);
   }
 
   function onUp(event) {
@@ -4125,14 +4802,13 @@ function openGlobeScene() {
         const dx = p.x - marker.x;
         const dy = p.y - marker.y;
         if (dx * dx + dy * dy <= hitRadius * hitRadius) {
-          if (!closest || marker.depth > closest.depth) {
+          if (!closest || marker.glowStrength > closest.glowStrength) {
             closest = marker;
           }
         }
       }
       if (closest) {
         current = closest.item;
-        photoIndex = 1;
         refreshDestinations();
         refreshPhoto();
       }
@@ -4144,7 +4820,6 @@ function openGlobeScene() {
   visitedBtn.addEventListener("click", () => {
     showingWishlist = false;
     current = visited[0];
-    photoIndex = 1;
     refreshModeButtons();
     refreshDestinations();
     refreshPhoto();
@@ -4153,19 +4828,8 @@ function openGlobeScene() {
   wishBtn.addEventListener("click", () => {
     showingWishlist = true;
     current = wishlist[0];
-    photoIndex = 1;
     refreshModeButtons();
     refreshDestinations();
-    refreshPhoto();
-  });
-
-  prevBtn.addEventListener("click", () => {
-    photoIndex = photoIndex <= 1 ? 4 : photoIndex - 1;
-    refreshPhoto();
-  });
-
-  nextBtn.addEventListener("click", () => {
-    photoIndex = photoIndex >= 4 ? 1 : photoIndex + 1;
     refreshPhoto();
   });
 
@@ -4189,7 +4853,7 @@ function openGlobeScene() {
     if (!state.isModalOpen) {
       return;
     }
-    drawGlobe();
+    drawMap();
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
@@ -4293,16 +4957,16 @@ function openRestaurantScene() {
   }
 
   function evaluateGuess() {
-    const today = todayLondonDate();
+    const today = todayLocalDate();
     const alreadyWonToday = localStorage.getItem(RESTAURANT_WIN_DATE_KEY) === today;
 
     if (guessMeal === "steak" && guessDrink === "old fashioned") {
       if (!alreadyWonToday) {
-        resultFlowers = 5;
-        state.flowers += 5;
+        resultFlowers = 10;
+        state.flowers += 10;
         persistFlowers();
         localStorage.setItem(RESTAURANT_WIN_DATE_KEY, today);
-        addFloater("+🌹5", state.player.x, state.player.y);
+        addFloater("+🌹10", state.player.x, state.player.y);
         resultLine = "Nailed it. Joe smiled before saying anything.";
       } else {
         resultFlowers = 0;
@@ -4327,16 +4991,38 @@ function openRestaurantScene() {
 
     if (page === 0) {
       stepText.textContent = "1/4 Mood";
-      let moodAsset = null;
+      let overlayMoodAsset = null;
+      let fallbackMoodAsset = null;
       if (mood === "Dinner") {
-        moodAsset = destinationArtAssets.restaurantMoodCozy;
+        overlayMoodAsset = destinationArtAssets.restaurantMoodOverlayCozy;
+        fallbackMoodAsset = destinationArtAssets.restaurantMoodCozy;
       } else if (mood === "Drinks") {
-        moodAsset = destinationArtAssets.restaurantMoodFancy;
+        overlayMoodAsset = destinationArtAssets.restaurantMoodOverlayFancy;
+        fallbackMoodAsset = destinationArtAssets.restaurantMoodFancy;
       } else {
-        moodAsset = destinationArtAssets.restaurantMoodFun;
+        overlayMoodAsset = destinationArtAssets.restaurantMoodOverlayChaotic;
+        fallbackMoodAsset = destinationArtAssets.restaurantMoodFun;
       }
-      if (moodAsset?.loaded && moodAsset.image && !moodAsset.errored) {
-        content.style.backgroundImage = `url("${moodAsset.src}")`;
+      const hasOverlay = overlayMoodAsset?.loaded && overlayMoodAsset.image && !overlayMoodAsset.errored;
+      const hasFallback = fallbackMoodAsset?.loaded && fallbackMoodAsset.image && !fallbackMoodAsset.errored;
+      if (hasOverlay && hasFallback) {
+        content.style.backgroundImage = `url("${overlayMoodAsset.src}"), url("${fallbackMoodAsset.src}")`;
+        content.style.backgroundSize = "cover, cover";
+        content.style.backgroundPosition = "center, center";
+        content.style.backgroundRepeat = "no-repeat, no-repeat";
+        content.style.borderRadius = "12px";
+        content.style.minHeight = "180px";
+        content.style.padding = "12px";
+      } else if (hasFallback) {
+        content.style.backgroundImage = `url("${fallbackMoodAsset.src}")`;
+        content.style.backgroundSize = "cover";
+        content.style.backgroundPosition = "center";
+        content.style.backgroundRepeat = "no-repeat";
+        content.style.borderRadius = "12px";
+        content.style.minHeight = "180px";
+        content.style.padding = "12px";
+      } else if (hasOverlay) {
+        content.style.backgroundImage = `url("${overlayMoodAsset.src}")`;
         content.style.backgroundSize = "cover";
         content.style.backgroundPosition = "center";
         content.style.backgroundRepeat = "no-repeat";
@@ -4760,6 +5446,7 @@ function drawDestinationDecor() {
     return;
   }
   const size = state.tileSize;
+  const drawAssetIfReady = (asset, x, y, w, h) => drawDestinationAsset(asset, x, y, w, h);
   for (const item of decorItems) {
     if (!isTileVisible(item.x, item.y, Math.max(item.w || 1, item.h || 1) - 1)) {
       continue;
@@ -4770,25 +5457,31 @@ function drawDestinationDecor() {
     const h = (item.h || 1) * size;
 
     if (item.type === "ski-tree") {
-      ctx.fillStyle = "#d9edf5";
-      ctx.fillRect(x + 4, y + h - 10, w - 8, 6);
-      ctx.fillStyle = "#2f6a52";
-      ctx.fillRect(x + w / 2 - 6, y + h - 16, 12, 12);
-      ctx.fillStyle = "#3e7e63";
-      ctx.fillRect(x + w / 2 - 12, y + h - 30, 24, 12);
-      ctx.fillRect(x + w / 2 - 16, y + h - 42, 32, 10);
-    } else if (item.type === "ski-fence") {
-      ctx.fillStyle = "#7d6758";
-      for (let i = 0; i < item.w; i += 1) {
-        ctx.fillRect(x + i * size + 4, y + h - 18, 4, 18);
+      if (!drawAssetIfReady(destinationArtAssets.skiPineTree01, x, y, w, h)) {
+        ctx.fillStyle = "#d9edf5";
+        ctx.fillRect(x + 4, y + h - 10, w - 8, 6);
+        ctx.fillStyle = "#2f6a52";
+        ctx.fillRect(x + w / 2 - 6, y + h - 16, 12, 12);
+        ctx.fillStyle = "#3e7e63";
+        ctx.fillRect(x + w / 2 - 12, y + h - 30, 24, 12);
+        ctx.fillRect(x + w / 2 - 16, y + h - 42, 32, 10);
       }
-      ctx.fillRect(x + 2, y + h - 14, w - 4, 4);
-      ctx.fillRect(x + 2, y + h - 7, w - 4, 4);
+    } else if (item.type === "ski-fence") {
+      if (!drawAssetIfReady(destinationArtAssets.skiFenceSegment01, x, y, w, h)) {
+        ctx.fillStyle = "#7d6758";
+        for (let i = 0; i < item.w; i += 1) {
+          ctx.fillRect(x + i * size + 4, y + h - 18, 4, 18);
+        }
+        ctx.fillRect(x + 2, y + h - 14, w - 4, 4);
+        ctx.fillRect(x + 2, y + h - 7, w - 4, 4);
+      }
     } else if (item.type === "snowbank") {
-      ctx.fillStyle = "#edf7fc";
-      ctx.fillRect(x + 4, y + 8, w - 8, h - 12);
-      ctx.fillStyle = "#d7e9f4";
-      ctx.fillRect(x + 8, y + 12, w - 16, 6);
+      if (!drawAssetIfReady(destinationArtAssets.skiSnowbank01, x, y, w, h)) {
+        ctx.fillStyle = "#edf7fc";
+        ctx.fillRect(x + 4, y + 8, w - 8, h - 12);
+        ctx.fillStyle = "#d7e9f4";
+        ctx.fillRect(x + 8, y + 12, w - 16, 6);
+      }
     } else if (item.type === "ski-sign") {
       ctx.fillStyle = "#6f5845";
       ctx.fillRect(x + w / 2 - 3, y + 10, 6, h - 10);
@@ -4796,6 +5489,20 @@ function drawDestinationDecor() {
       ctx.fillRect(x + 6, y + 8, w - 12, 16);
       ctx.fillStyle = "#f7e8d2";
       ctx.fillRect(x + 11, y + 14, w - 22, 4);
+    } else if (item.type === "ski-rock") {
+      if (!drawAssetIfReady(destinationArtAssets.skiRock01, x, y, w, h)) {
+        ctx.fillStyle = "#8f96a0";
+        ctx.fillRect(x + 8, y + h - 14, w - 16, 10);
+        ctx.fillStyle = "#727a84";
+        ctx.fillRect(x + 12, y + h - 18, w - 24, 6);
+      }
+    } else if (item.type === "ski-flag") {
+      if (!drawAssetIfReady(destinationArtAssets.skiSlalomFlagRed, x, y, w, h)) {
+        ctx.fillStyle = "#6f5845";
+        ctx.fillRect(x + w / 2 - 1, y + 4, 2, h - 4);
+        ctx.fillStyle = "#bf3e48";
+        ctx.fillRect(x + w / 2 + 1, y + 6, Math.max(6, w - 6), 6);
+      }
     } else if (item.type === "airport-bench") {
       ctx.fillStyle = "#66727f";
       ctx.fillRect(x + 6, y + h - 18, w - 12, 8);
@@ -4810,19 +5517,36 @@ function drawDestinationDecor() {
       ctx.fillStyle = "#2e3944";
       ctx.fillRect(x + 8, y + h - 8, 6, 4);
       ctx.fillRect(x + w - 14, y + h - 8, 6, 4);
-    } else if (item.type === "airport-plant") {
-      ctx.fillStyle = "#7d6a5b";
-      ctx.fillRect(x + w / 2 - 8, y + h - 10, 16, 8);
-      ctx.fillStyle = "#4f8868";
-      ctx.fillRect(x + w / 2 - 14, y + h - 24, 28, 14);
-      ctx.fillStyle = "#67a07f";
-      ctx.fillRect(x + w / 2 - 10, y + h - 30, 20, 8);
+    } else if (item.type === "airport-plant" || item.type === "airport-kiosk-plant") {
+      if (!drawAssetIfReady(destinationArtAssets.airportPlantPot01, x, y, w, h)) {
+        ctx.fillStyle = "#7d6a5b";
+        ctx.fillRect(x + w / 2 - 8, y + h - 10, 16, 8);
+        ctx.fillStyle = "#4f8868";
+        ctx.fillRect(x + w / 2 - 14, y + h - 24, 28, 14);
+        ctx.fillStyle = "#67a07f";
+        ctx.fillRect(x + w / 2 - 10, y + h - 30, 20, 8);
+      }
     } else if (item.type === "airport-barrier") {
       ctx.fillStyle = "#c64557";
       ctx.fillRect(x + 4, y + h / 2 - 3, w - 8, 6);
       ctx.fillStyle = "#59636f";
       ctx.fillRect(x + 6, y + h / 2 - 10, 4, 20);
       ctx.fillRect(x + w - 10, y + h / 2 - 10, 4, 20);
+    } else if (item.type === "airport-queue-rope") {
+      if (!drawAssetIfReady(destinationArtAssets.airportQueueRope01, x, y, w, h)) {
+        ctx.fillStyle = "#59636f";
+        ctx.fillRect(x + 6, y + h - 16, 4, 16);
+        ctx.fillRect(x + w - 10, y + h - 16, 4, 16);
+        ctx.fillStyle = "#c64557";
+        ctx.fillRect(x + 10, y + h - 11, Math.max(8, w - 20), 4);
+      }
+    } else if (item.type === "airport-luggage") {
+      if (!drawAssetIfReady(destinationArtAssets.airportLuggageStack01, x, y, w, h)) {
+        ctx.fillStyle = "#6a7d95";
+        ctx.fillRect(x + 5, y + h - 13, w - 10, 9);
+        ctx.fillStyle = "#7f92ab";
+        ctx.fillRect(x + 10, y + h - 20, w - 20, 6);
+      }
     } else if (item.type === "rest-table") {
       ctx.fillStyle = "#8c6f5a";
       ctx.fillRect(x + 8, y + 8, w - 16, h - 16);
@@ -4831,12 +5555,14 @@ function drawDestinationDecor() {
       ctx.fillStyle = "#f1ddb8";
       ctx.fillRect(x + w / 2 - 2, y + h / 2 - 2, 4, 4);
     } else if (item.type === "rest-plant") {
-      ctx.fillStyle = "#7a6050";
-      ctx.fillRect(x + w / 2 - 7, y + h - 10, 14, 8);
-      ctx.fillStyle = "#4f7d5f";
-      ctx.fillRect(x + w / 2 - 12, y + h - 22, 24, 12);
-      ctx.fillStyle = "#6ca280";
-      ctx.fillRect(x + w / 2 - 8, y + h - 28, 16, 6);
+      if (!drawAssetIfReady(destinationArtAssets.restaurantPlantPot01, x, y, w, h)) {
+        ctx.fillStyle = "#7a6050";
+        ctx.fillRect(x + w / 2 - 7, y + h - 10, 14, 8);
+        ctx.fillStyle = "#4f7d5f";
+        ctx.fillRect(x + w / 2 - 12, y + h - 22, 24, 12);
+        ctx.fillStyle = "#6ca280";
+        ctx.fillRect(x + w / 2 - 8, y + h - 28, 16, 6);
+      }
     } else if (item.type === "rest-candle") {
       ctx.fillStyle = "#efd7b5";
       ctx.fillRect(x + 10, y + 10, w - 20, h - 14);
@@ -4852,6 +5578,27 @@ function drawDestinationDecor() {
       ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
       ctx.fillStyle = "#d7b88f";
       ctx.fillRect(x + 6, y + 5, w - 12, h - 10);
+    } else if (item.type === "rest-menu-board") {
+      if (!drawAssetIfReady(destinationArtAssets.restaurantMenuBoard01, x, y, w, h)) {
+        ctx.fillStyle = "#6f5845";
+        ctx.fillRect(x + 3, y + 3, w - 6, h - 6);
+        ctx.fillStyle = "#e7d5b1";
+        ctx.fillRect(x + 7, y + 8, w - 14, h - 14);
+      }
+    } else if (item.type === "rest-window") {
+      if (!drawAssetIfReady(destinationArtAssets.restaurantWindow01, x, y, w, h)) {
+        ctx.fillStyle = "#74899f";
+        ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+        ctx.fillStyle = "#c2d5e8";
+        ctx.fillRect(x + 6, y + 6, w - 12, h - 12);
+      }
+    } else if (item.type === "rest-candle-table") {
+      if (!drawAssetIfReady(destinationArtAssets.restaurantCandleTable01, x, y, w, h)) {
+        ctx.fillStyle = "#8c6f5a";
+        ctx.fillRect(x + 5, y + 6, w - 10, h - 10);
+        ctx.fillStyle = "#f0aa58";
+        ctx.fillRect(x + w / 2 - 1, y + 4, 2, 3);
+      }
     }
   }
 }
@@ -4861,6 +5608,34 @@ function drawInteractables() {
   const nearbyInteractable = !state.isModalOpen
     ? getInteractableNearPlayer(state, state.activeWorldLayout)
     : null;
+  const getPreferredCarAsset = () => {
+    if (bedroomArtAssets.carNew.loaded && bedroomArtAssets.carNew.image && !bedroomArtAssets.carNew.errored) {
+      return bedroomArtAssets.carNew;
+    }
+    if (bedroomArtAssets.carBase.loaded && bedroomArtAssets.carBase.image && !bedroomArtAssets.carBase.errored) {
+      return bedroomArtAssets.carBase;
+    }
+    if (bedroomArtAssets.car.loaded && bedroomArtAssets.car.image && !bedroomArtAssets.car.errored) {
+      return bedroomArtAssets.car;
+    }
+    return null;
+  };
+  const drawCarContained = (asset, x, y, w, h) => {
+    if (!asset?.image) {
+      return false;
+    }
+    const pad = 3;
+    const maxW = Math.max(1, w - pad * 2);
+    const maxH = Math.max(1, h - pad * 2);
+    const scale = Math.min(maxW / asset.image.width, maxH / asset.image.height);
+    const drawW = Math.max(1, Math.round(asset.image.width * scale));
+    const drawH = Math.max(1, Math.round(asset.image.height * scale));
+    const dx = x + Math.round((w - drawW) * 0.5);
+    const dy = y + Math.round((h - drawH) * 0.5);
+    ctx.drawImage(asset.image, dx, dy, drawW, drawH);
+    return true;
+  };
+
   for (const obj of state.activeWorldLayout.interactables) {
     const x = obj.x * size - state.camera.x;
     const y = obj.y * size - state.camera.y;
@@ -4893,13 +5668,15 @@ function drawInteractables() {
         drewSprite = true;
       }
     } else if (obj.type === "car") {
-      const carAsset =
-        bedroomArtAssets.carBase.loaded && bedroomArtAssets.carBase.image && !bedroomArtAssets.carBase.errored
-          ? bedroomArtAssets.carBase
-          : bedroomArtAssets.car;
-      if (carAsset.loaded && carAsset.image && !carAsset.errored) {
+      const carAsset = getPreferredCarAsset();
+      if (carAsset?.loaded && carAsset.image && !carAsset.errored) {
         ctx.drawImage(carAsset.image, x, y, w, h);
         drewSprite = true;
+      }
+    } else if (obj.type === "back-car") {
+      const carAsset = getPreferredCarAsset();
+      if (carAsset) {
+        drewSprite = drawCarContained(carAsset, x, y, w, h);
       }
     } else if (obj.type === "telesiege") {
       const skiAsset = destinationArtAssets.skiLiftKiosk;
@@ -5345,39 +6122,64 @@ function drawDebugOverlay() {
 }
 
 function getGuideTargets() {
-  if (state.currentWorld !== "home") {
+  const layout = state.activeWorldLayout;
+  if (!layout) {
     return [];
   }
-  const layout = state.activeWorldLayout;
   const targets = [];
-  const car = layout.interactables?.find((obj) => obj.type === "car");
-  if (car) {
-    targets.push({
-      id: "car",
-      label: "Car",
-      x: car.x + car.w / 2,
-      y: car.y + car.h / 2
-    });
+  if (state.currentWorld === "home") {
+    const car = layout.interactables?.find((obj) => obj.type === "car");
+    if (car) {
+      targets.push({
+        id: "car",
+        label: "Car",
+        x: car.x + car.w / 2,
+        y: car.y + car.h / 2
+      });
+    }
+
+    const pool = layout.zones?.poolRegion;
+    if (pool) {
+      targets.push({
+        id: "pool",
+        label: "Pool",
+        x: pool.x + pool.w / 2,
+        y: pool.y + pool.h / 2
+      });
+    }
+
+    const bedroom = layout.zones?.bedroomRegion;
+    if (bedroom) {
+      targets.push({
+        id: "room",
+        label: "Room",
+        x: bedroom.x + Math.floor(bedroom.w / 2),
+        y: bedroom.y + bedroom.h - 1
+      });
+    }
+    return targets;
   }
 
-  const pool = layout.zones?.poolRegion;
-  if (pool) {
-    targets.push({
-      id: "pool",
-      label: "Pool",
-      x: pool.x + pool.w / 2,
-      y: pool.y + pool.h / 2
-    });
+  if (!["ski", "airport", "restaurant"].includes(state.currentWorld)) {
+    return targets;
   }
 
-  const bedroom = layout.zones?.bedroomRegion;
-  if (bedroom) {
+  for (const obj of layout.interactables || []) {
+    let label = obj.label;
+    if (obj.type === "back-car") {
+      label = "Back to Car";
+    } else if (obj.type === "telesiege") {
+      label = "Ski Lift";
+    } else if (obj.type === "departures") {
+      label = "Departures";
+    } else if (obj.type === "restaurant-door") {
+      label = "Restaurant";
+    }
     targets.push({
-      id: "room",
-      label: "Room",
-      // Bedroom doorway center tile at bottom edge.
-      x: bedroom.x + Math.floor(bedroom.w / 2),
-      y: bedroom.y + bedroom.h - 1
+      id: obj.id,
+      label,
+      x: obj.x + obj.w / 2,
+      y: obj.y + obj.h / 2
     });
   }
 
@@ -5537,6 +6339,7 @@ function start() {
   if (state.companion.x === state.player.x && state.companion.y === state.player.y) {
     placeCompanionNearPlayer();
   }
+  openIntroOverlay();
 
   document.addEventListener("keydown", handleInput);
   requestAnimationFrame(gameLoop);

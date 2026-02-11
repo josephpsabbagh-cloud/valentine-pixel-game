@@ -160,11 +160,27 @@ body {
   min-width: 120px;
 }
 
+.destination-buttons .ui-button.chip-selected {
+  background: #5f7d53;
+  color: #f5ffec;
+  border-color: #2f4a26;
+  border-radius: 18px;
+  box-shadow: 0 0 0 2px rgba(214, 237, 191, 0.95), 0 3px 0 rgba(32, 56, 24, 0.55);
+}
+
 .music-picker {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 10px;
+}
+
+.music-picker .ui-button.chip-selected {
+  background: #3f567b;
+  color: #f2f6ff;
+  border-color: #243955;
+  border-radius: 18px;
+  box-shadow: 0 0 0 2px rgba(201, 219, 255, 0.95), 0 3px 0 rgba(23, 39, 63, 0.55);
 }
 
 .step-header {
@@ -263,16 +279,20 @@ body {
   border: 2px solid #2b2b2b;
   background: #f8f3e8;
   height: 220px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 8px;
   overflow: hidden;
 }
 
 .globe-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .globe-photo-placeholder {
@@ -280,13 +300,6 @@ body {
   font-size: 14px;
   text-align: center;
   padding: 12px;
-}
-
-.carousel-controls {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
 }
 
 @media (max-width: 900px) {

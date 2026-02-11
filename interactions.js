@@ -217,7 +217,9 @@ export function tryCollectFlower(state, layout) {
   if (!Array.isArray(state.collectedFlowerIds)) {
     state.collectedFlowerIds = [];
   }
-  if (!state.collectedFlowerIds.includes(flower.id)) {
+  const shouldPersistCollectedId =
+    typeof flower.id === "string" && !flower.id.startsWith("dyn-flower-");
+  if (shouldPersistCollectedId && !state.collectedFlowerIds.includes(flower.id)) {
     state.collectedFlowerIds.push(flower.id);
   }
 
