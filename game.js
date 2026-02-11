@@ -1,5 +1,6 @@
 import { getWorldLayout, worldLayouts } from "./world.js";
 import { characters } from "./characters.js";
+import { getBackgroundTileId } from "./bg_tileset.js";
 import {
   getInteractableNearPlayer,
   isPointInRect,
@@ -293,7 +294,8 @@ const state = {
     soundOn: true
   },
   debug: {
-    showTileOverlay: false
+    showTileOverlay: false,
+    backgroundLayerEnabled: true
   }
 };
 
@@ -4513,6 +4515,12 @@ function tryMove(dx, dy) {
 function handleInput(event) {
   const key = event.key.toLowerCase();
 
+  if (key === "b") {
+    state.debug.backgroundLayerEnabled = !state.debug.backgroundLayerEnabled;
+    event.preventDefault();
+    return;
+  }
+
   if (key === "t") {
     state.debug.showTileOverlay = !state.debug.showTileOverlay;
     event.preventDefault();
@@ -4575,6 +4583,116 @@ function handleInput(event) {
   }
 }
 
+function getWorldBaseTileColor(world) {
+  const bgMap = {
+    home: "#fffdf7",
+    ski: "#eef5fb",
+    airport: "#f3f4f8",
+    restaurant: "#f8f2e9"
+  };
+  return bgMap[world] ?? "#fffdf7";
+}
+
+function drawPlainGridTile(layout, x, y, px, py, size) {
+  ctx.fillStyle = getWorldBaseTileColor(state.currentWorld);
+  ctx.fillRect(px, py, size, size);
+
+  if (state.currentWorld !== "home" || !layout.zones) {
+    return;
+  }
+
+  const { bedroomRegion, outsideRegion, drivewayRegion, poolRegion } = layout.zones;
+  const inRect = (rect) => rect && x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h;
+
+  if (inRect(outsideRegion)) {
+    const greenA = "#dceecf";
+    const greenB = "#d4e7c7";
+    const plantTone = "#bfdcaf";
+    ctx.fillStyle = (x + y) % 2 === 0 ? greenA : greenB;
+    ctx.fillRect(px, py, size, size);
+    if ((x * 11 + y * 7) % 9 === 0) {
+      ctx.fillStyle = plantTone;
+      ctx.fillRect(px + 6, py + 8, 5, 5);
+      ctx.fillRect(px + 12, py + 14, 4, 4);
+    }
+  }
+  if (inRect(drivewayRegion)) {
+    ctx.fillStyle = (x + y) % 2 === 0 ? "#d9d9dc" : "#ceced1";
+    ctx.fillRect(px, py, size, size);
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillRect(px + 3, py + 3, size - 6, 2);
+  }
+  if (inRect(poolRegion)) {
+    ctx.fillStyle = (x + y) % 2 === 0 ? "#91cde9" : "#84c3e0";
+    ctx.fillRect(px, py, size, size);
+    ctx.fillStyle = "rgba(235, 248, 255, 0.35)";
+    ctx.fillRect(px + 8, py + 10, 20, 2);
+    ctx.fillRect(px + 18, py + 20, 12, 2);
+  }
+  if (inRect(bedroomRegion)) {
+    const floorAsset = bedroomArtAssets.floor;
+    if (floorAsset.loaded && floorAsset.image && !floorAsset.errored) {
+      ctx.drawImage(floorAsset.image, px, py, size, size);
+    } else {
+      ctx.fillStyle = "#fff7ea";
+      ctx.fillRect(px, py, size, size);
+    }
+  }
+}
+
+function drawBackgroundTileById(tileId, x, y, px, py, size) {
+  switch (tileId) {
+    case "grass": {
+      ctx.fillStyle = "#d8ebca";
+      ctx.fillRect(px, py, size, size);
+      if ((x + y) % 3 === 0) {
+        ctx.fillStyle = "rgba(129, 167, 118, 0.25)";
+        ctx.fillRect(px + 7, py + 10, 4, 6);
+        ctx.fillRect(px + 15, py + 20, 3, 5);
+      }
+      return true;
+    }
+    case "path":
+      ctx.fillStyle = "#d5d4d7";
+      ctx.fillRect(px, py, size, size);
+      ctx.fillStyle = "rgba(245, 245, 248, 0.3)";
+      ctx.fillRect(px + 2, py + 4, size - 4, 2);
+      return true;
+    case "water":
+      ctx.fillStyle = "#87c8e2";
+      ctx.fillRect(px, py, size, size);
+      ctx.fillStyle = "rgba(230, 246, 255, 0.28)";
+      ctx.fillRect(px + 8, py + 10, size - 16, 2);
+      ctx.fillRect(px + 14, py + 20, size - 26, 2);
+      return true;
+    case "bedroom-floor":
+      ctx.fillStyle = ((x + y) % 2 === 0) ? "#f9efdf" : "#f5e7d4";
+      ctx.fillRect(px, py, size, size);
+      return true;
+    case "snow":
+      ctx.fillStyle = "#eaf4fb";
+      ctx.fillRect(px, py, size, size);
+      if (((x * 5 + y * 3) % 7) === 0) {
+        ctx.fillStyle = "rgba(211, 230, 244, 0.35)";
+        ctx.fillRect(px + 10, py + 12, 3, 3);
+      }
+      return true;
+    case "airport-stone":
+      ctx.fillStyle = "#e1e5ea";
+      ctx.fillRect(px, py, size, size);
+      ctx.strokeStyle = "rgba(170, 177, 185, 0.34)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px + 0.5, py + 0.5, size - 1, size - 1);
+      return true;
+    case "restaurant-floor":
+      ctx.fillStyle = ((x + y) % 2 === 0) ? "#eadac2" : "#e2d0b6";
+      ctx.fillRect(px, py, size, size);
+      return true;
+    default:
+      return false;
+  }
+}
+
 function drawGrid() {
   const layout = state.activeWorldLayout;
   const size = state.tileSize;
@@ -4584,64 +4702,22 @@ function drawGrid() {
   const startY = Math.max(0, Math.floor(state.camera.y / size) - 1);
   const endY = Math.min(layout.height - 1, Math.ceil((state.camera.y + state.viewport.h) / size) + 1);
 
-  const bgMap = {
-    home: "#fffdf7",
-    ski: "#eef5fb",
-    airport: "#f3f4f8",
-    restaurant: "#f8f2e9"
-  };
-
-  ctx.fillStyle = bgMap[state.currentWorld] ?? "#fffdf7";
+  ctx.fillStyle = getWorldBaseTileColor(state.currentWorld);
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   for (let y = startY; y <= endY; y += 1) {
     for (let x = startX; x <= endX; x += 1) {
       const px = x * size - state.camera.x;
       const py = y * size - state.camera.y;
-
-      if (state.currentWorld === "home" && layout.zones) {
-        const { bedroomRegion, outsideRegion, drivewayRegion, poolRegion } = layout.zones;
-        const inRect = (rect) =>
-          rect &&
-          x >= rect.x &&
-          x < rect.x + rect.w &&
-          y >= rect.y &&
-          y < rect.y + rect.h;
-
-        if (inRect(outsideRegion)) {
-          const greenA = "#dceecf";
-          const greenB = "#d4e7c7";
-          const plantTone = "#bfdcaf";
-          ctx.fillStyle = (x + y) % 2 === 0 ? greenA : greenB;
-          ctx.fillRect(px, py, size, size);
-          if ((x * 11 + y * 7) % 9 === 0) {
-            ctx.fillStyle = plantTone;
-            ctx.fillRect(px + 6, py + 8, 5, 5);
-            ctx.fillRect(px + 12, py + 14, 4, 4);
-          }
+      let drewTile = false;
+      if (state.debug.backgroundLayerEnabled) {
+        const tileId = getBackgroundTileId(state.currentWorld, x, y, layout);
+        if (tileId) {
+          drewTile = drawBackgroundTileById(tileId, x, y, px, py, size);
         }
-        if (inRect(drivewayRegion)) {
-          ctx.fillStyle = (x + y) % 2 === 0 ? "#d9d9dc" : "#ceced1";
-          ctx.fillRect(px, py, size, size);
-          ctx.fillStyle = "rgba(255,255,255,0.12)";
-          ctx.fillRect(px + 3, py + 3, size - 6, 2);
-        }
-        if (inRect(poolRegion)) {
-          ctx.fillStyle = (x + y) % 2 === 0 ? "#91cde9" : "#84c3e0";
-          ctx.fillRect(px, py, size, size);
-          ctx.fillStyle = "rgba(235, 248, 255, 0.35)";
-          ctx.fillRect(px + 8, py + 10, 20, 2);
-          ctx.fillRect(px + 18, py + 20, 12, 2);
-        }
-        if (inRect(bedroomRegion)) {
-          const floorAsset = bedroomArtAssets.floor;
-          if (floorAsset.loaded && floorAsset.image && !floorAsset.errored) {
-            ctx.drawImage(floorAsset.image, px, py, size, size);
-          } else {
-            ctx.fillStyle = "#fff7ea";
-            ctx.fillRect(px, py, size, size);
-          }
-        }
+      }
+      if (!drewTile) {
+        drawPlainGridTile(layout, x, y, px, py, size);
       }
     }
   }
@@ -5169,8 +5245,8 @@ function drawHUD() {
   ctx.fillText(`World: ${state.currentWorld}`, panelX + 14, panelY + 56);
   ctx.strokeText("Move: arrows/WASD · Interact: E", panelX + 14, panelY + 78);
   ctx.fillText("Move: arrows/WASD · Interact: E", panelX + 14, panelY + 78);
-  ctx.strokeText("Letters: L · Debug Grid: T", panelX + 14, panelY + 98);
-  ctx.fillText("Letters: L · Debug Grid: T", panelX + 14, panelY + 98);
+  ctx.strokeText("Letters: L · Debug Grid: T · BG: B", panelX + 14, panelY + 98);
+  ctx.fillText("Letters: L · Debug Grid: T · BG: B", panelX + 14, panelY + 98);
 
   const nextTarget = getNextLetterTarget();
   if (nextTarget === null) {
