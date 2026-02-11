@@ -1,0 +1,16 @@
+{
+  "name": "valentine_pixel_game",
+  "version": "1.0.0",
+  "description": "A browser-based pixel-style game built with plain HTML, CSS, and JavaScript modules.",
+  "main": "characters.js",
+  "scripts": {
+    "split:car-layers": "node tools/sprites/split_car_layers.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "sharp": "^0.34.4"
+  }
+}
