@@ -3,19 +3,39 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Our Little World</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Charly's Valentine's Day Gift</title>
+    <link rel="stylesheet" href="landing.css" />
   </head>
   <body>
-    <main id="app">
-      <canvas id="gameCanvas" width="800" height="600"></canvas>
-      <div id="ui"></div>
+    <main class="landing-shell">
+      <section class="gift-card">
+        <p class="eyebrow">For Charly</p>
+        <h1>Charly's Valentine's Day Gift</h1>
+        <p class="subtitle">A little world made with love. Enter the password to begin.</p>
+        <form id="accessForm" class="access-form" autocomplete="off">
+          <label for="giftPassword">Password</label>
+          <input id="giftPassword" name="giftPassword" type="password" required />
+          <button type="submit">Open The Gift</button>
+          <p id="feedback" class="feedback" aria-live="polite"></p>
+        </form>
+      </section>
     </main>
 
-    <audio id="driveTrack1" preload="auto" src="assets/music/track1.mp3"></audio>
-    <audio id="driveTrack2" preload="auto" src="assets/music/track2.mp3"></audio>
-    <audio id="driveTrack3" preload="auto" src="assets/music/track3.mp3"></audio>
+    <script>
+      const ACCESS_PASSWORD = "charlymylove";
+      const ACCESS_KEY = "olw_access_granted";
+      const ACCESS_VALUE = "yes";
 
-    <script type="module" src="game.js"></script>
+      document.getElementById("accessForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const pw = document.getElementById("giftPassword").value.trim().toLowerCase();
+        if (pw === ACCESS_PASSWORD) {
+          sessionStorage.setItem(ACCESS_KEY, ACCESS_VALUE);
+          window.location.href = "./game.html";
+        } else {
+          document.getElementById("feedback").textContent = "That's not it — try again!";
+        }
+      });
+    </script>
   </body>
 </html>
