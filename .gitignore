@@ -47,3 +47,6 @@ backups/
 *.zip
 keys/*.json
 keys/*.json
+
+# local tool folder (not part of deploy)
+nano-banana-mcp/
